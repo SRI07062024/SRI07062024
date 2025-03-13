@@ -5,9 +5,9 @@ from datetime import datetime
 
 # ✅ Ensure `st.set_page_config()` is the first Streamlit command
 st.set_page_config(
-    page_title="Editable Portfolio Performance Data",
+    page_title="Override Dashboard",
     page_icon="📊",
-    layout="wide"
+    layout="centered"
 )
 
 # Title with custom styling
