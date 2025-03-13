@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-from snowflake.snowpark.context import get_active_session
+from snowflake.snowpark import Session  # ✅ Correct import
 from datetime import datetime
-
 
 # Snowflake connection parameters from Streamlit secrets
 connection_parameters = {
@@ -16,6 +15,8 @@ connection_parameters = {
 
 # Create a Snowpark session
 session = Session.builder.configs(connection_parameters).create()
+
+st.write("✅ Successfully connected to Snowflake!")
 
 # Page configuration
 st.set_page_config(
