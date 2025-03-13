@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # Title with custom styling
-st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Editable Portfolio Performance Data</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
 
 # ✅ Snowflake connection parameters from Streamlit secrets
 try:
