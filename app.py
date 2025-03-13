@@ -3,6 +3,20 @@ import pandas as pd
 from snowflake.snowpark.context import get_active_session
 from datetime import datetime
 
+
+# Snowflake connection parameters from Streamlit secrets
+connection_parameters = {
+    "account": st.secrets["SNOWFLAKE_ACCOUNT"],
+    "user": st.secrets["SNOWFLAKE_USER"],
+    "password": st.secrets["SNOWFLAKE_PASSWORD"],
+    "warehouse": st.secrets["SNOWFLAKE_WAREHOUSE"],
+    "database": st.secrets["SNOWFLAKE_DATABASE"],
+    "schema": st.secrets["SNOWFLAKE_SCHEMA"],
+}
+
+# Create a Snowpark session
+session = Session.builder.configs(connection_parameters).create()
+
 # Page configuration
 st.set_page_config(
     page_title="Editable Portfolio Performance Data",
