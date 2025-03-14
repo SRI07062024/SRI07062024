@@ -55,13 +55,28 @@ module_from_url = query_params.get("module", None)
 
 default_module = f"Module-{module_from_url}" if module_from_url and f"Module-{module_from_url}" in available_modules else None
 
-# ✅ Module selection
-# st.write("### Selected Module")
-if default_module:
-    st.text_input("Module", default_module, disabled=True)
-    selected_module = default_module
+# Fetch available modules
+module_df = fetch_modules()
+available_modules = module_df['MODULE_DISPLAY'].tolist()
+
+# Read module number from URL parameters (Power BI)
+query_params = st.query_params
+module_from_url = query_params.get("module", None)  # Get module from URL
+
+# Set default module based on URL
+if module_from_url:
+    default_module = module_df.loc[module_df['MODULE'] == int(module_from_url), 'MODULE_DISPLAY'].values[0]
+    selected_module = st.text_input("Module", default_module, disabled=True)  # Blocked when opened from Power BI
 else:
     selected_module = st.selectbox("Select Module", available_modules)
+
+# # ✅ Module selection
+# # st.write("### Selected Module")
+# if default_module:
+#     st.text_input("Module", default_module, disabled=True)
+#     selected_module = default_module
+# else:
+#     selected_module = st.selectbox("Select Module", available_modules)
 
 # ✅ Fetch override ref data for the selected module
 def fetch_override_ref_data(selected_module):
