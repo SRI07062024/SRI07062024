@@ -78,12 +78,28 @@ else:
 # else:
 #     selected_module = st.selectbox("Select Module", available_modules)
 
-# ✅ Fetch override ref data for the selected module
+
 def fetch_override_ref_data(selected_module):
+    if not selected_module or "|" not in selected_module:
+        st.error("❌ Invalid module format. Expected format: '<number> | <module name>'")
+        return pd.DataFrame()
+
+    try:
+        module_num = int(selected_module.split('|')[0].strip())  # Extract module number
+    except ValueError:
+        st.error("❌ Module number is not a valid integer.")
+        return pd.DataFrame()
+
     df = session.table("Override_Ref").to_pandas()
     df.columns = [col.upper() for col in df.columns]
-    module_num = int(selected_module.split('-')[1])
     return df[df['MODULE'] == module_num] if not df.empty else pd.DataFrame()
+    
+# # ✅ Fetch override ref data for the selected module
+# def fetch_override_ref_data(selected_module):
+#     df = session.table("Override_Ref").to_pandas()
+#     df.columns = [col.upper() for col in df.columns]
+#     module_num = int(selected_module.split('-')[1])
+#     return df[df['MODULE'] == module_num] if not df.empty else pd.DataFrame()
 
 module_tables_df = fetch_override_ref_data(selected_module)
 available_tables = module_tables_df['SOURCE_TABLE'].unique() if not module_tables_df.empty else []
