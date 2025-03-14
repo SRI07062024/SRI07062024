@@ -47,7 +47,7 @@ module_from_url = query_params.get("module", None)
 default_module = f"Module-{module_from_url}" if module_from_url and f"Module-{module_from_url}" in available_modules else None
 
 # ✅ Module selection
-st.write("### Selected Module")
+# st.write("### Selected Module")
 if default_module:
     st.text_input("Module", default_module, disabled=True)
     selected_module = default_module
