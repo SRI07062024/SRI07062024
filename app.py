@@ -84,18 +84,13 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
-                # ✅ Apply custom CSS to highlight the editable column
-                highlight_color = "#FFF3CD"  # Light yellow
-                st.markdown(
-                    f"""
-                    <style>
-                        [data-testid="stDataEditor"] tbody tr td:nth-child({source_df.columns.get_loc(editable_column) + 1}) {{
-                            background-color: {highlight_color} !important;
-                        }}
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
+                # ✅ Function to highlight the editable column
+                def highlight_editable_column(val):
+                    color = "background-color: #FFF3CD" if val.name == editable_column else ""  # Light yellow highlight
+                    return [color] * len(val)
+    
+                # ✅ Apply highlight style to the editable column
+                styled_df = source_df.style.apply(highlight_editable_column, axis=0)
 
                 # ✅ Dynamically define column type
                 if pd.api.types.is_numeric_dtype(source_df[editable_column]):
