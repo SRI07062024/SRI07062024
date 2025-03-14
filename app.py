@@ -82,17 +82,25 @@ if not table_info_df.empty:
         st.subheader(f"Source Data from {selected_table}")
         source_df = session.table(selected_table).to_pandas()
 
+        # Apply custom CSS to highlight the editable column
+        st.markdown(
+            """
+            <style>
+            .editable-column {
+                background-color: #FFF3CD !important;  /* Light Yellow Background */
+                color: black !important;  /* Keep text color readable */
+                font-weight: bold !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
         if not source_df.empty:
             # Ensure editable column is in DataFrame
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
-                # 🔥 Highlight the Editable Column Title
-                st.markdown(
-                    f"<h4 style='color: #E91E63;'>🔹 Editable Column: "
-                    f"<span style='background-color: yellow; padding: 3px; border-radius: 5px;'>{editable_column}</span></h4>",
-                    unsafe_allow_html=True
-                )
                 # Make only the editable column modifiable
                 edited_df = st.data_editor(
                     source_df,
