@@ -69,7 +69,7 @@ selected_table = st.selectbox("Select Table", available_tables)
 table_info_df = module_tables_df[module_tables_df['SOURCE_TABLE'] == selected_table] if not module_tables_df.empty else pd.DataFrame()
 
 if not table_info_df.empty:
-    target_table_name = table_info_df['TARGET_TABLE'].iloc[0]
+    target_table_name = table_info_df['TARGET_TABLE'].iloc[0].upper()
     # editable_column = table_info_df['EDITABLE_COLUMN'].iloc[0] 
     editable_column = table_info_df['EDITABLE_COLUMN'].iloc[0].upper()  # Editable column from Override_Ref
 
