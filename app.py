@@ -101,6 +101,19 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
+                # ✅ Apply custom styling to highlight the editable column
+                def highlight_editable(val):
+                    return "background-color: #FFF3CD; font-weight: bold;" if val.name == editable_column else ""
+        
+                styled_df = source_df.style.applymap(highlight_editable, subset=[editable_column])
+        
+                # ✅ Display the table with highlighting
+                edited_df = st.data_editor(
+                    styled_df,
+                    disabled=[col for col in source_df.columns if col != editable_column], 
+                    num_rows="dynamic",
+                    use_container_width=True
+                )
                 # Make only the editable column modifiable
                 edited_df = st.data_editor(
                     source_df,
