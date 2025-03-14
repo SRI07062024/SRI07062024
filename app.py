@@ -87,6 +87,11 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
+                # 🔥 Highlight the Editable Column Title
+        st.markdown(
+            f"<h4 style='color: #E91E63;'>🔹 Editable Column: <span style='background-color: yellow; padding: 3px; border-radius: 5px;'>{editable_column}</span></h4>",
+            unsafe_allow_html=True
+                    )
                 # Make only the editable column modifiable
                 edited_df = st.data_editor(
                     source_df,
