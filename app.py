@@ -97,27 +97,26 @@ if not table_info_df.empty:
         )
 
         if not source_df.empty:
-            # Ensure editable column is in DataFrame
-            if editable_column not in source_df.columns:
-                st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
-            else:
-                # ✅ Apply custom styling to highlight the editable column
-                def highlight_editable(val):
-                    return "background-color: #FFF3CD; font-weight: bold;" if val.name == editable_column else ""
-        
-                styled_df = source_df.style.applymap(highlight_editable, subset=[editable_column])
+    if editable_column not in source_df.columns:
+        st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
+    else:
+        # ✅ Define column configuration to highlight editable column
+        column_config = {
+            editable_column: st.column_config.TextColumn(
+                "🟡 " + editable_column,  # Highlight column title
+                help="This column is editable",
+            )
+        }
 
-                # ✅ Format the editable column by wrapping its values with Markdown for highlighting
-                source_df[editable_column] = source_df[editable_column].apply(lambda x: f"**🟡 {x}**")
-    
-        
-                # ✅ Display the table with highlighting
-                edited_df = st.data_editor(
-                    styled_df,
-                    disabled=[col for col in source_df.columns if col != editable_column], 
-                    num_rows="dynamic",
-                    use_container_width=True
-                )
+        # ✅ Display the table with editable column visually highlighted
+        edited_df = st.data_editor(
+            source_df,
+            column_config=column_config,  # Apply highlighting
+            disabled=[col for col in source_df.columns if col != editable_column], 
+            num_rows="dynamic",
+            use_container_width=True
+        )
+
                 
                 # ✅ Submit Updates Button
                 if st.button("Submit Updates", type="primary"):
