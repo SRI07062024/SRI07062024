@@ -106,6 +106,10 @@ if not table_info_df.empty:
                     return "background-color: #FFF3CD; font-weight: bold;" if val.name == editable_column else ""
         
                 styled_df = source_df.style.applymap(highlight_editable, subset=[editable_column])
+
+                # ✅ Format the editable column by wrapping its values with Markdown for highlighting
+                source_df[editable_column] = source_df[editable_column].apply(lambda x: f"**🟡 {x}**")
+    
         
                 # ✅ Display the table with highlighting
                 edited_df = st.data_editor(
@@ -114,14 +118,7 @@ if not table_info_df.empty:
                     num_rows="dynamic",
                     use_container_width=True
                 )
-                # Make only the editable column modifiable
-                edited_df = st.data_editor(
-                    source_df,
-                    disabled=[col for col in source_df.columns if col != editable_column], 
-                    num_rows="dynamic",
-                    use_container_width=True
-                )
-
+                
                 # ✅ Submit Updates Button
                 if st.button("Submit Updates", type="primary"):
                     edited_rows = edited_df[source_df[editable_column] != edited_df[editable_column]]
