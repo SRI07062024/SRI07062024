@@ -31,12 +31,21 @@ try:
 except Exception as e:
     st.error(f"❌ Failed to connect to Snowflake: {e}")
     st.stop()
-
-# ✅ Fetch available modules from Override_Ref
+    
+# Function to fetch modules from Override_Ref
 def fetch_modules():
     df = session.table("Override_Ref").to_pandas()
     df.columns = [col.upper() for col in df.columns]
-    return [f"Module-{int(module)}" for module in df['MODULE'].unique()] if not df.empty else []
+    df['MODULE_DISPLAY'] = df.apply(lambda row: f"Module-{int(row['MODULE'])} | {row['MODULE_NAME']}", axis=1)
+    return df[['MODULE', 'MODULE_DISPLAY']].drop_duplicates()
+
+
+
+# # ✅ Fetch available modules from Override_Ref
+# def fetch_modules():
+#     df = session.table("Override_Ref").to_pandas()
+#     df.columns = [col.upper() for col in df.columns]
+#     return [f"Module-{int(module)}" for module in df['MODULE'].unique()] if not df.empty else []
 
 available_modules = fetch_modules()
 
