@@ -70,7 +70,8 @@ table_info_df = module_tables_df[module_tables_df['SOURCE_TABLE'] == selected_ta
 
 if not table_info_df.empty:
     target_table_name = table_info_df['TARGET_TABLE'].iloc[0]
-    editable_column = table_info_df['EDITABLE_COLUMN'].iloc[0]  # Editable column from Override_Ref
+    # editable_column = table_info_df['EDITABLE_COLUMN'].iloc[0] 
+    editable_column = table_info_df['EDITABLE_COLUMN'].iloc[0].upper()  # Editable column from Override_Ref
 
     # ✅ Display Data Tabs
     tab1, tab2 = st.tabs(["Source Data", "Overridden Values"])
