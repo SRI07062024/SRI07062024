@@ -96,7 +96,7 @@ if not table_info_df.empty:
             unsafe_allow_html=True
         )
 
-        if not source_df.empty:
+if not source_df.empty:
     if editable_column not in source_df.columns:
         st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
     else:
