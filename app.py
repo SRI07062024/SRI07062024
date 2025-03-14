@@ -85,15 +85,7 @@ if not table_info_df.empty:
         if not source_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
-            else:
-                # ✅ Define column configuration to highlight editable column
-                column_config = {
-                    editable_column: st.column_config.TextColumn(
-                        "🟡 " + editable_column,  # Highlight column title
-                        help="This column is editable",
-                    )
-                }
-        
+            else:      
                 # ✅ Display the table with editable column visually highlighted
                 edited_df = st.data_editor(
                     source_df,
