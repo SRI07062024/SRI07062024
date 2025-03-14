@@ -86,7 +86,7 @@ if not table_info_df.empty:
             else:
                 # ✅ Define column configuration to highlight the editable column
                 column_config = {
-                    editable_column: st.column_config.TextColumn(
+                    editable_column: st.column_config.NumberColumn(
                         "🔹 " + editable_column,  # Adds an emoji to highlight the column title
                         help="This column is editable.",  # Tooltip
                         required=True,
