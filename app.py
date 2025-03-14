@@ -32,20 +32,12 @@ except Exception as e:
     st.error(f"❌ Failed to connect to Snowflake: {e}")
     st.stop()
     
-# Function to fetch modules from Override_Ref
+
+# ✅ Fetch available modules from Override_Ref
 def fetch_modules():
     df = session.table("Override_Ref").to_pandas()
     df.columns = [col.upper() for col in df.columns]
-    df['MODULE_DISPLAY'] = df.apply(lambda row: f"Module-{int(row['MODULE'])} | {row['MODULE_NAME']}", axis=1)
-    return df[['MODULE', 'MODULE_DISPLAY']].drop_duplicates()
-
-
-
-# # ✅ Fetch available modules from Override_Ref
-# def fetch_modules():
-#     df = session.table("Override_Ref").to_pandas()
-#     df.columns = [col.upper() for col in df.columns]
-#     return [f"Module-{int(module)}" for module in df['MODULE'].unique()] if not df.empty else []
+    return [f"Module-{int(module)}" for module in df['MODULE'].unique()] if not df.empty else []
 
 available_modules = fetch_modules()
 
@@ -55,51 +47,21 @@ module_from_url = query_params.get("module", None)
 
 default_module = f"Module-{module_from_url}" if module_from_url and f"Module-{module_from_url}" in available_modules else None
 
-# Fetch available modules
-module_df = fetch_modules()
-available_modules = module_df['MODULE_DISPLAY'].tolist()
 
-# Read module number from URL parameters (Power BI)
-query_params = st.query_params
-module_from_url = query_params.get("module", None)  # Get module from URL
-
-# Set default module based on URL
-if module_from_url:
-    default_module = module_df.loc[module_df['MODULE'] == int(module_from_url), 'MODULE_DISPLAY'].values[0]
-    selected_module = st.text_input("Module", default_module, disabled=True)  # Blocked when opened from Power BI
+# ✅ Module selection
+# st.write("### Selected Module")
+if default_module:
+    st.text_input("Module", default_module, disabled=True)
+    selected_module = default_module
 else:
     selected_module = st.selectbox("Select Module", available_modules)
 
-# # ✅ Module selection
-# # st.write("### Selected Module")
-# if default_module:
-#     st.text_input("Module", default_module, disabled=True)
-#     selected_module = default_module
-# else:
-#     selected_module = st.selectbox("Select Module", available_modules)
-
-
+# ✅ Fetch override ref data for the selected module
 def fetch_override_ref_data(selected_module):
-    if not selected_module or "|" not in selected_module:
-        st.error("❌ Invalid module format. Expected format: '<number> | <module name>'")
-        return pd.DataFrame()
-
-    try:
-        module_num = int(selected_module.split('|')[0].strip())  # Extract module number
-    except ValueError:
-        st.error("❌ Module number is not a valid integer.")
-        return pd.DataFrame()
-
     df = session.table("Override_Ref").to_pandas()
     df.columns = [col.upper() for col in df.columns]
+    module_num = int(selected_module.split('-')[1])
     return df[df['MODULE'] == module_num] if not df.empty else pd.DataFrame()
-    
-# # ✅ Fetch override ref data for the selected module
-# def fetch_override_ref_data(selected_module):
-#     df = session.table("Override_Ref").to_pandas()
-#     df.columns = [col.upper() for col in df.columns]
-#     module_num = int(selected_module.split('-')[1])
-#     return df[df['MODULE'] == module_num] if not df.empty else pd.DataFrame()
 
 module_tables_df = fetch_override_ref_data(selected_module)
 available_tables = module_tables_df['SOURCE_TABLE'].unique() if not module_tables_df.empty else []
