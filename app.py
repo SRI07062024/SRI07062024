@@ -52,7 +52,15 @@ if default_module:
     st.text_input("Module", default_module, disabled=True)
     selected_module = default_module
 else:
-    selected_module = st.selectbox("Select Module", available_modules)
+    # selected_module = st.selectbox("Select Module", available_modules)
+
+    col1, col2 = st.columns([1, 1])  # Two equal-width columns (50% each)
+
+    with col1:
+        selected_module = st.selectbox("Select Module", available_modules, key="module_select")
+
+    with col2:
+        st.write("")  # Keeps second column empty for spacing
 
 # ✅ Fetch override ref data for the selected module
 def fetch_override_ref_data(selected_module):
