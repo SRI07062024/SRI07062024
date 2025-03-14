@@ -13,6 +13,19 @@ st.set_page_config(
 # ✅ Title with styling
 st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
 
+# ✅ Custom CSS to Highlight Editable Column
+st.markdown(
+    """
+    <style>
+        .highlight-editable {
+            background-color: #FFF3CD !important;  /* Light yellow background */
+            font-weight: bold;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ✅ Snowflake connection parameters from Streamlit secrets
 try:
     connection_parameters = {
@@ -84,6 +97,13 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
+                # ✅ Apply custom CSS class to highlight editable column
+                def highlight_column(val):
+                    return "highlight-editable" if val.name == editable_column else ""
+
+                styled_df = source_df.style.applymap(highlight_column, subset=[editable_column])
+
+                # ✅ Display the table with editable column highlighted              
                 # Make only the editable column modifiable
                 edited_df = st.data_editor(
                     source_df,
