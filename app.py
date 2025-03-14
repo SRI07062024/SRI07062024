@@ -82,40 +82,26 @@ if not table_info_df.empty:
         st.subheader(f"Source Data from {selected_table}")
         source_df = session.table(selected_table).to_pandas()
 
-        # Apply custom CSS to highlight the editable column
-        st.markdown(
-            """
-            <style>
-            .editable-column {
-                background-color: #FFF3CD !important;  /* Light Yellow Background */
-                color: black !important;  /* Keep text color readable */
-                font-weight: bold !important;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-
-if not source_df.empty:
-    if editable_column not in source_df.columns:
-        st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
-    else:
-        # ✅ Define column configuration to highlight editable column
-        column_config = {
-            editable_column: st.column_config.TextColumn(
-                "🟡 " + editable_column,  # Highlight column title
-                help="This column is editable",
-            )
-        }
-
-        # ✅ Display the table with editable column visually highlighted
-        edited_df = st.data_editor(
-            source_df,
-            column_config=column_config,  # Apply highlighting
-            disabled=[col for col in source_df.columns if col != editable_column], 
-            num_rows="dynamic",
-            use_container_width=True
-        )
+        if not source_df.empty:
+            if editable_column not in source_df.columns:
+                st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
+            else:
+                # ✅ Define column configuration to highlight editable column
+                column_config = {
+                    editable_column: st.column_config.TextColumn(
+                        "🟡 " + editable_column,  # Highlight column title
+                        help="This column is editable",
+                    )
+                }
+        
+                # ✅ Display the table with editable column visually highlighted
+                edited_df = st.data_editor(
+                    source_df,
+                    column_config=column_config,  # Apply highlighting
+                    disabled=[col for col in source_df.columns if col != editable_column], 
+                    num_rows="dynamic",
+                    use_container_width=True
+                )
 
                 
                 # ✅ Submit Updates Button
