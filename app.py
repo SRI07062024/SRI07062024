@@ -58,9 +58,21 @@ else:
 
     with col1:
         selected_module = st.selectbox("Select Module", available_modules, key="module_select")
+    # ✅ Fetch Portfolio Name matching selected Module
+    def fetch_portfolio_name(selected_module):
+        df = session.table("Override_Ref").to_pandas()
+        df.columns = [col.upper() for col in df.columns]
+        module_num = int(selected_module.split('-')[1])
+        portfolio_name = df[df['MODULE'] == module_num]['PORTFOLIO_NAME'].unique()
+        return portfolio_name[0] if len(portfolio_name) > 0 else "N/A"
+
+    portfolio_name = fetch_portfolio_name(selected_module)
 
     with col2:
-        st.write("")  # Keeps second column empty for spacing
+        st.text_input("Portfolio Name", portfolio_name, disabled=True)  # Show matched Portfolio Name
+
+    # with col2:
+    #     st.write("")  # Keeps second column empty for spacing
 
 # ✅ Fetch override ref data for the selected module
 def fetch_override_ref_data(selected_module):
