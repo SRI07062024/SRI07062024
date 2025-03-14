@@ -97,7 +97,7 @@ if not table_info_df.empty:
                 if st.button("Submit Updates", type="primary"):
                     edited_rows = edited_df[source_df[editable_column] != edited_df[editable_column]]
                     if not edited_rows.empty:
-                        # edited_rows['AS_AT_DATE'] = pd.to_datetime(datetime.now())  # Add timestamp
+                        edited_rows['AS_AT_DATE'] = pd.to_datetime(datetime.now()).astype(str)  # Add timestamp
                         edited_rows['RECORD_FLAG'] = 'O'  # Mark as overridden
 
                         # Insert edited rows into target table
