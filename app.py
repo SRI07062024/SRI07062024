@@ -121,7 +121,7 @@ if not table_info_df.empty:
                     if col != editable_column:  # Exclude editable column from filtering
                         #filter_values[col] = cols[i].text_input(f"🔍 {col}", "")
                         #filter_values[col] = cols[i]
-                        filter_values[col] = cols[i].text_input("", "")
+                        filter_values[col] = cols[i].text_input("", "", key=f"filter_{col}")
 
                 # ✅ Apply filters dynamically
                 
