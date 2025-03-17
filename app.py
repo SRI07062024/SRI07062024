@@ -102,19 +102,19 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
-                # ✅ Apply highlight style to the editable column
-                def highlight_editable_column(data):
-                    return [
-                        "background-color: #FFF3CD" if col == editable_column else "" 
-                        for col in data.index
-                    ]
+               # ✅ Filtering Section (excluding editable column)
+                filterable_columns = [col for col in source_df.columns if col != editable_column]
+                selected_filter_column = st.selectbox("Filter by Column:", filterable_columns, index=0)
+                filter_value = st.text_input(f"Enter filter value for {selected_filter_column}:")
 
-                # ✅ Define column configuration
-                # ✅ Dynamically set the column type based on the data type
+                if filter_value:
+                    source_df = source_df[source_df[selected_filter_column].astype(str).str.contains(filter_value, case=False, na=False)]
+
+                # ✅ Column Configuration
                 if pd.api.types.is_numeric_dtype(source_df[editable_column]):
-                    column_type = st.column_config.NumberColumn  # Use NumberColumn for numbers
+                    column_type = st.column_config.NumberColumn
                 else:
-                    column_type = st.column_config.TextColumn  # Use TextColumn for text
+                    column_type = st.column_config.TextColumn
                 
                 column_config = {
                     editable_column: column_type(
