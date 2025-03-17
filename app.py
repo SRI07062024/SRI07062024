@@ -119,7 +119,7 @@ if not table_info_df.empty:
 
                 for i, col in enumerate(source_df.columns):
                     if col != editable_column:  # Exclude editable column from filtering
-                        filter_values[col] = cols[i].text_input("", "", placeholder=f"🔍 Search {col}")
+                        filter_values[col] = cols[i].text_input("", "", placeholder=f"Filter {col}")
 
                 # ✅ Apply filters dynamically
                 
