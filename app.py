@@ -105,10 +105,21 @@ if not table_info_df.empty:
                # ✅ Create input fields for column-wise filtering
                 filter_values = {}
                 cols = st.columns(len(source_df.columns))  # Create a column for each field
+                # Apply consistent width using CSS
+                st.markdown(
+                    """
+                    <style>
+                    .stTextInput {
+                        width: 100% !important;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
 
                 for i, col in enumerate(source_df.columns):
                     if col != editable_column:  # Exclude editable column from filtering
-                        filter_values[col] = cols[i].text_input(f" {col}", "")
+                        filter_values[col] = cols[i].text_input("", "", placeholder=f"🔍 Search {col}")
 
                 # ✅ Apply filters dynamically
                 
