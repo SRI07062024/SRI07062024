@@ -125,30 +125,14 @@ if not table_info_df.empty:
                 else:
                     column_type = st.column_config.TextColumn
                 
-                # column_config = {
-                #     editable_column: column_type(
-                #         "✏️ " + editable_column,  
-                #         help="This column is editable.",
-                #         required=True,
-                #     )
-
-                # ✅ Define column configurations dynamically
                 column_config = {
-                    col: (
-                        st.column_config.NumberColumn(col, help=f"Sort & filter {col}")
-                        if pd.api.types.is_numeric_dtype(source_df[col])
-                        else st.column_config.TextColumn(col, help=f"Sort & filter {col}")
+                    editable_column: column_type(
+                        "✏️ " + editable_column,  
+                        help="This column is editable.",
+                        required=True,
                     )
-                    for col in source_df.columns
                 }
-
-                    # ✅ Ensure the editable column remains modifiable
-                column_config[editable_column] = column_type(
-                    "✏️ " + editable_column,  
-                    help="This column is editable.",
-                    required=True,
-                    )
-                                
+                             
                 # ✅ Make only the editable column modifiable
                 edited_df = st.data_editor(
                     source_df,
