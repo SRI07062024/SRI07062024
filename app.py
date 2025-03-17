@@ -47,12 +47,19 @@ module_from_url = query_params.get("module", None)
 default_module = f"Module-{module_from_url}" if module_from_url and f"Module-{module_from_url}" in available_modules else None
 
 # ✅ Module selection
-#st.write("### Selected Module")
+# #st.write("### Selected Module")
+# if default_module:
+#     st.text_input("Module", default_module, disabled=True)
+#     selected_module = default_module
+# else:
+#     selected_module = st.selectbox("Select Module", available_modules)
+
+# New Logic
 if default_module:
-    st.text_input("Module", default_module, disabled=True)
-    selected_module = default_module
+    selected_module = default_module  # Use default module from URL, hide dropdown
 else:
-    selected_module = st.selectbox("Select Module", available_modules)
+    # If no default module, select the first available module (to prevent errors)
+    selected_module = available_modules[0] if available_modules else None
 
 # ✅ Fetch override ref data for the selected module
 def fetch_override_ref_data(selected_module):
