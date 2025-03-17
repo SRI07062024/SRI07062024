@@ -102,29 +102,19 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
-               # ✅ Create input fields for column-wise filtering
+                # Create a row of search boxes matching table columns
+                cols = st.columns([max(1, len(col)) for col in source_df.columns])  # Adjust width dynamically
                 filter_values = {}
-                cols = st.columns(len(source_df.columns))  # Create a column for each field
-                # Apply consistent width using CSS
-                st.markdown(
-                    """
-                    <style>
-                    .stTextInput {
-                        width: 100% !important;
-                    }
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-                for i, col in enumerate(source_df.columns):
-                    if col != editable_column:  # Exclude editable column from filtering
-                        filter_values[col] = cols[i].text_input(f"{col}", "")
-                        #filter_values[col] = cols[i]
-                        #filter_values[col] = cols[i].text_input("", "", key=f"filter_{col}")
-
-                # ✅ Apply filters dynamically
                 
+                for i, col in enumerate(source_df.columns):
+                    if col != editable_column:  # Exclude editable column
+                        filter_values[col] = cols[i].text_input("", key=f"filter_{col}")
+                    else:
+                        cols[i].markdown("")  # Keep space aligned, but no search box
+
+               # ✅ Apply filters dynamically
+
+                # Apply filtering             
                 for col, value in filter_values.items():
                     if value:
                         source_df = source_df[source_df[col].astype(str).str.contains(value, case=False, na=False)]
