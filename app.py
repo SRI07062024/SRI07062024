@@ -125,31 +125,32 @@ if not table_info_df.empty:
                 else:
                     column_type = st.column_config.TextColumn
 
-                # ✅ Define column configurations dynamically
-                column_config = {
-                    col: (
-                        st.column_config.NumberColumn(col, help=f"Sort & filter {col}")
-                        if pd.api.types.is_numeric_dtype(source_df[col])
-                        else st.column_config.TextColumn(col, help=f"Sort & filter {col}")
-                    )
-                    for col in source_df.columns
-                }
-                
-                column_config[editable_column] = column_type(
+                # ✅ Define column configurations dynamically based on actual data types
+                    column_config = {}
+                    
+                    for col in source_df.columns:
+                        if pd.api.types.is_numeric_dtype(source_df[col]):
+                            column_config[col] = st.column_config.NumberColumn(col, help=f"Sort & filter {col}")
+                        else:
+                            column_config[col] = st.column_config.TextColumn(col, help=f"Sort & filter {col}")
+                    
+                    # ✅ Ensure the editable column remains modifiable
+                    column_config[editable_column] = column_type(
                         "✏️ " + editable_column,  
                         help="This column is editable.",
                         required=True,
                     )
-                                             
-                # ✅ Make only the editable column modifiable
-                edited_df = st.data_editor(
-                    source_df,
-                    column_config=column_config,
-                    hide_index=True,  # Hide default index column
-                    disabled=[], 
-                    num_rows="dynamic",
-                    use_container_width=True
-                )
+                    
+                    # ✅ Enable sorting & filtering for all columns, but restrict editing to only the editable column
+                    edited_df = st.data_editor(
+                        source_df,
+                        column_config=column_config,
+                        hide_index=True,  # Hide default index column
+                        disabled=[col for col in source_df.columns if col != editable_column],  # Allow editing only for one column
+                        num_rows="dynamic",
+                        use_container_width=True
+                    )
+
 
                 # ✅ Submit Button with Animation
                 if st.button("🚀 Submit Updates", type="primary"):
