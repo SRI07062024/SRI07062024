@@ -102,19 +102,18 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
-                # ✅ Apply highlight style to the editable column
-                def highlight_editable_column(data):
-                    return [
-                        "background-color: #FFF3CD" if col == editable_column else "" 
-                        for col in data.index
-                    ]
-               # ✅ Filtering Section (excluding editable column)
-                filterable_columns = [col for col in source_df.columns if col != editable_column]
-                selected_filter_column = st.selectbox("Filter by Column:", filterable_columns, index=0)
-                filter_value = st.text_input(f"Enter filter value for {selected_filter_column}:")
+               # ✅ Create input fields for column-wise filtering
+                filter_values = {}
+                cols = st.columns(len(source_df.columns))  # Create a column for each field
 
-                if filter_value:
-                    source_df = source_df[source_df[selected_filter_column].astype(str).str.contains(filter_value, case=False, na=False)]
+                for i, col in enumerate(source_df.columns):
+                    if col != editable_column:  # Exclude editable column from filtering
+                        filter_values[col] = cols[i].text_input(f"🔍 {col}", "")
+
+                # ✅ Apply filters dynamically
+                for col, value in filter_values.items():
+                    if value:
+                        source_df = source_df[source_df[col].astype(str).str.contains(value, case=False, na=False)]
 
                 # ✅ Column Configuration
                 if pd.api.types.is_numeric_dtype(source_df[editable_column]):
@@ -132,7 +131,7 @@ if not table_info_df.empty:
                 
                 # ✅ Make only the editable column modifiable
                 edited_df = st.data_editor(
-                    source_df.style.apply(highlight_editable_column, axis=1),
+                    source_df,
                     column_config=column_config,
                     disabled=[col for col in source_df.columns if col != editable_column], 
                     num_rows="dynamic",
