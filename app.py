@@ -81,10 +81,10 @@ if not table_info_df.empty:
     editable_column = table_info_df['EDITABLE_COLUMN'].iloc[0].upper()  # Editable column from Override_Ref
 
     # ✅ Display Data Tabs
-    tab1, tab2 = st.tabs(["Source Data", "Overridden Values"])
+    tab1, tab2 = st.tabs(["📌 Source Data", "📝 Overridden Values"])
 
     with tab1:
-        st.subheader(f"Source Data from {selected_table}")
+        st.subheader(f"🔍Source Data from {selected_table}")
         source_df = session.table(selected_table).to_pandas()
 
         if not source_df.empty:
@@ -123,8 +123,8 @@ if not table_info_df.empty:
                     use_container_width=True
                 )
 
-                # ✅ Submit Updates Button
-                if st.button("Submit Updates", type="primary"):
+                # ✅ Submit Button with Animation
+                if st.button("🚀 Submit Updates", type="primary"):
                     edited_rows = edited_df[source_df[editable_column] != edited_df[editable_column]]
                     if not edited_rows.empty:
                         edited_rows['AS_AT_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add timestamp
@@ -140,7 +140,7 @@ if not table_info_df.empty:
             st.info(f"ℹ️ No data available in {selected_table}.")
 
     with tab2:
-        st.subheader(f"Overridden Values from {target_table_name}")
+        st.subheader(f"📝Overridden Values from {target_table_name}")
         overridden_df = session.table(target_table_name).to_pandas()
         overridden_df = overridden_df[overridden_df['RECORD_FLAG'] == 'O'] if not overridden_df.empty else pd.DataFrame()
         if not overridden_df.empty:
