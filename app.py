@@ -103,12 +103,14 @@ if not table_info_df.empty:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
                # ✅ Create input fields for column-wise filtering
+                cols = st.columns([max(1, len(col)) for col in source_df.columns])  # Adjust width dynamically
                 filter_values = {}
-                cols = st.columns(len(source_df.columns))  # Create a column for each field
 
                 for i, col in enumerate(source_df.columns):
                     if col != editable_column:  # Exclude editable column from filtering
-                        filter_values[col] = cols[i].text_input(f"🔍 {col}", "")
+                        filter_values[col] = cols[i].text_input("", key=f"filter_{col}")
+                    else:
+                        cols[i].markdown("")  # Keep space aligned, but no search box
 
                 # ✅ Apply filters dynamically
                 for col, value in filter_values.items():
