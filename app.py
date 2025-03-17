@@ -137,6 +137,7 @@ if not table_info_df.empty:
                 edited_df = st.data_editor(
                     source_df,
                     column_config=column_config,
+                    hide_index=True,  # Hide default index column
                     disabled=[col for col in source_df.columns if col != editable_column], 
                     num_rows="dynamic",
                     use_container_width=True
