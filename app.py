@@ -32,44 +32,44 @@ except Exception as e:
     st.error(f"❌ Failed to connect to Snowflake: {e}")
     st.stop()
 
-# ✅ Fetch available modules from Override_Ref
-def fetch_modules():
+# ✅ Fetch Module Name from Override_Ref
+def fetch_module_name(module_num):
     df = session.table("Override_Ref").to_pandas()
     df.columns = [col.upper() for col in df.columns]
-    return [f"Module-{int(module)}" for module in df['MODULE'].unique()] if not df.empty else []
+    module_info = df[df['MODULE'] == module_num]['MODULE_NAME'].unique()
+    return module_info[0] if len(module_info) > 0 else "Unknown Module"
 
-available_modules = fetch_modules()
-
-# ✅ Read module number from URL parameters
+# ✅ Read module number from Power BI URL
 query_params = st.query_params
 module_from_url = query_params.get("module", None)
 
-default_module = f"Module-{module_from_url}" if module_from_url and f"Module-{module_from_url}" in available_modules else None
-
-# ✅ Module selection
-# #st.write("### Selected Module")
-# if default_module:
-#     st.text_input("Module", default_module, disabled=True)
-#     selected_module = default_module
-# else:
-#     selected_module = st.selectbox("Select Module", available_modules)
-
-# New Logic
-if default_module:
-    selected_module = default_module  # Use default module from URL, hide dropdown
+# ✅ Convert to integer and fetch module name
+if module_from_url:
+    try:
+        module_num = int(module_from_url)
+        module_name = fetch_module_name(module_num)
+        selected_module = f"Module-{module_num}"
+    except ValueError:
+        module_name = "Invalid Module"
+        selected_module = None
 else:
-    # If no default module, select the first available module (to prevent errors)
-    selected_module = available_modules[0] if available_modules else None
+    module_name = "No Module Selected"
+    selected_module = None
+
+# ✅ Display Module Name as a heading above the Select Table dropdown
+st.markdown(f"### {module_name}", unsafe_allow_html=True)
 
 # ✅ Fetch override ref data for the selected module
-def fetch_override_ref_data(selected_module):
+def fetch_override_ref_data(module_num):
     df = session.table("Override_Ref").to_pandas()
     df.columns = [col.upper() for col in df.columns]
-    module_num = int(selected_module.split('-')[1])
     return df[df['MODULE'] == module_num] if not df.empty else pd.DataFrame()
 
-module_tables_df = fetch_override_ref_data(selected_module)
+# Fetch data only if a valid module is selected
+module_tables_df = fetch_override_ref_data(module_num) if selected_module else pd.DataFrame()
 available_tables = module_tables_df['SOURCE_TABLE'].unique() if not module_tables_df.empty else []
+
+# ✅ Select Table Dropdown (with Module Name above)
 selected_table = st.selectbox("Select Table", available_tables)
 
 # ✅ Get target table and editable column
@@ -91,32 +91,26 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
-                # ✅ Function to highlight the editable column
-                def highlight_editable_column(val):
-                    color = "background-color: #FFF3CD" if val.name == editable_column else ""  # Light yellow highlight
-                    return [color] * len(val)
-    
                 # ✅ Apply highlight style to the editable column
-                styled_df = source_df.style.apply(highlight_editable_column, axis=0)
+                def highlight_editable_column(data):
+                    return [
+                        "background-color: #FFF3CD" if col == editable_column else "" 
+                        for col in data.index
+                    ]
 
-                # ✅ Dynamically define column type
-                if pd.api.types.is_numeric_dtype(source_df[editable_column]):
-                    column_type = st.column_config.NumberColumn
-                else:
-                    column_type = st.column_config.TextColumn  # Use TextColumn for text
-    
                 # ✅ Define column configuration
                 column_config = {
-                    editable_column: column_type(
+                    editable_column: st.column_config.TextColumn(
                         "✏️ " + editable_column,  
                         help="This column is editable.",
                         required=True,
                     )
                 }
-                # Make only the editable column modifiable
+                
+                # ✅ Make only the editable column modifiable
                 edited_df = st.data_editor(
-                    source_df,
-                    column_config=column_config,  # Apply highlighting
+                    source_df.style.apply(highlight_editable_column, axis=1),
+                    column_config=column_config,
                     disabled=[col for col in source_df.columns if col != editable_column], 
                     num_rows="dynamic",
                     use_container_width=True
