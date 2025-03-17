@@ -102,19 +102,15 @@ if not table_info_df.empty:
             if editable_column not in source_df.columns:
                 st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
             else:
-                # Create a row of search boxes matching table columns
-                cols = st.columns([max(1, len(col)) for col in source_df.columns])  # Adjust width dynamically
+               # ✅ Create input fields for column-wise filtering
                 filter_values = {}
-                
+                cols = st.columns(len(source_df.columns))  # Create a column for each field
+
                 for i, col in enumerate(source_df.columns):
-                    if col != editable_column:  # Exclude editable column
-                        filter_values[col] = cols[i].text_input("", key=f"filter_{col}")
-                    else:
-                        cols[i].markdown("")  # Keep space aligned, but no search box
+                    if col != editable_column:  # Exclude editable column from filtering
+                        filter_values[col] = cols[i].text_input(f"🔍 {col}", "")
 
-               # ✅ Apply filters dynamically
-
-                # Apply filtering             
+                # ✅ Apply filters dynamically
                 for col, value in filter_values.items():
                     if value:
                         source_df = source_df[source_df[col].astype(str).str.contains(value, case=False, na=False)]
@@ -124,33 +120,23 @@ if not table_info_df.empty:
                     column_type = st.column_config.NumberColumn
                 else:
                     column_type = st.column_config.TextColumn
-
+                
                 column_config = {
-                     col: (
-                         st.column_config.NumberColumn(col, help=f"Sort & filter {col}")
-                         if pd.api.types.is_numeric_dtype(source_df[col])
-                         else st.column_config.TextColumn(col, help=f"Sort & filter {col}")
-                     )
-                     for col in source_df.columns
-                 }
- 
-                     # ✅ Ensure the editable column remains modifiable
-                 column_config[editable_column] = column_type(
-                     "✏️ " + editable_column,  
-                     help="This column is editable.",
-                     required=True,
-                    )               
-                                 
-                 # ✅ Make only the editable column modifiable
-                 edited_df = st.data_editor(
-                     source_df,
-                     column_config=column_config,
-                     #hide_index=True,  # Hide default index column
-                     disabled=[col for col in source_df.columns if col != editable_column], 
-                     num_rows="dynamic",
-                     use_container_width=True
-                 )
-
+                    editable_column: column_type(
+                        "✏️ " + editable_column,  
+                        help="This column is editable.",
+                        required=True,
+                    )
+                }
+                
+                # ✅ Make only the editable column modifiable
+                edited_df = st.data_editor(
+                    source_df,
+                    column_config=column_config,
+                    disabled=[col for col in source_df.columns if col != editable_column], 
+                    num_rows="dynamic",
+                    use_container_width=True
+                )
 
                 # ✅ Submit Button with Animation
                 if st.button("🚀 Submit Updates", type="primary"):
