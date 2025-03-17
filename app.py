@@ -124,21 +124,29 @@ if not table_info_df.empty:
                     column_type = st.column_config.NumberColumn
                 else:
                     column_type = st.column_config.TextColumn
-                
+
+                # ✅ Define column configurations dynamically
                 column_config = {
-                    editable_column: column_type(
+                    col: (
+                        st.column_config.NumberColumn(col, help=f"Sort & filter {col}")
+                        if pd.api.types.is_numeric_dtype(source_df[col])
+                        else st.column_config.TextColumn(col, help=f"Sort & filter {col}")
+                    )
+                    for col in source_df.columns
+                }
+                
+                column_config[editable_column] = column_type(
                         "✏️ " + editable_column,  
                         help="This column is editable.",
                         required=True,
                     )
-                }
-                             
+                                             
                 # ✅ Make only the editable column modifiable
                 edited_df = st.data_editor(
                     source_df,
                     column_config=column_config,
-                    #hide_index=True,  # Hide default index column
-                    disabled=[col for col in source_df.columns if col != editable_column], 
+                    hide_index=True,  # Hide default index column
+                    disabled=[], 
                     num_rows="dynamic",
                     use_container_width=True
                 )
