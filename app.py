@@ -58,7 +58,7 @@ else:
 
 # ✅ Display Module Name as a heading above the Select Table dropdown
 #st.markdown(f"### {module_name}", unsafe_allow_html=True)
-st.markdown(f"<h2 style='text-align: center; color: #1E88E5;'>{module_name}</h2>", unsafe_allow_html=True)
+st.markdown(f"<h2 style='text-align: center; color: black; text-decoration: underline;'>{module_name}</h2>", unsafe_allow_html=True)
 
 # ✅ Fetch override ref data for the selected module
 def fetch_override_ref_data(module_num):
