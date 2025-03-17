@@ -10,7 +10,17 @@ st.set_page_config(
     layout="centered"
 )
 
-# ✅ Title with styling
+# ✅ Apply Global Styling
+st.markdown("""
+    <style>
+        .stApp { background-color: #f8f9fa; } /* Light grey background */
+        .stButton>button { background-color: #1E88E5; color: white; font-size: 16px; padding: 10px; }
+        .stTabs [role="tab"] { font-size: 18px; font-weight: bold; }
+        .css-1cpxqw2 { font-size: 16px; }
+    </style>
+""", unsafe_allow_html=True)
+
+# ✅ Title
 st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
 
 # ✅ Snowflake connection parameters from Streamlit secrets
