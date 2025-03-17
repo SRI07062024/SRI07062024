@@ -99,8 +99,14 @@ if not table_info_df.empty:
                     ]
 
                 # ✅ Define column configuration
+                # ✅ Dynamically set the column type based on the data type
+                if pd.api.types.is_numeric_dtype(source_df[editable_column]):
+                    column_type = st.column_config.NumberColumn  # Use NumberColumn for numbers
+                else:
+                    column_type = st.column_config.TextColumn  # Use TextColumn for text
+                
                 column_config = {
-                    editable_column: st.column_config.TextColumn(
+                    editable_column: column_type(
                         "✏️ " + editable_column,  
                         help="This column is editable.",
                         required=True,
