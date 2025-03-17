@@ -148,8 +148,7 @@ if not table_info_df.empty:
                     help="This column is editable.",
                     required=True,
                     )
-                }
-                
+                                
                 # ✅ Make only the editable column modifiable
                 edited_df = st.data_editor(
                     source_df,
