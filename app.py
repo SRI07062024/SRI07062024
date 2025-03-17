@@ -94,65 +94,71 @@ if not table_info_df.empty:
     tab1, tab2 = st.tabs(["📌 Source Data", "📝 Overridden Values"])
 
     with tab1:
-        st.subheader(f"🔍Source Data from {selected_table}")
-        source_df = session.table(selected_table).to_pandas()
+    st.subheader(f"🔍 Source Data from {selected_table}")
+    source_df = session.table(selected_table).to_pandas()
 
-        if not source_df.empty:
-            # Ensure editable column is in DataFrame
-            if editable_column not in source_df.columns:
-                st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
-            else:
-               # ✅ Create input fields for column-wise filtering
-                filter_values = {}
-                cols = st.columns(len(source_df.columns))  # Create a column for each field
-
-                for i, col in enumerate(source_df.columns):
-                    if col != editable_column:  # Exclude editable column from filtering
-                        filter_values[col] = cols[i].text_input(f"🔍 {col}", "")
-
-                # ✅ Apply filters dynamically
-                for col, value in filter_values.items():
-                    if value:
-                        source_df = source_df[source_df[col].astype(str).str.contains(value, case=False, na=False)]
-
-                # ✅ Column Configuration
-                if pd.api.types.is_numeric_dtype(source_df[editable_column]):
-                    column_type = st.column_config.NumberColumn
-                else:
-                    column_type = st.column_config.TextColumn
-                
-                column_config = {
-                    editable_column: column_type(
-                        "✏️ " + editable_column,  
-                        help="This column is editable.",
-                        required=True,
-                    )
-                }
-                
-                # ✅ Make only the editable column modifiable
-                edited_df = st.data_editor(
-                    source_df,
-                    column_config=column_config,
-                    disabled=[col for col in source_df.columns if col != editable_column], 
-                    num_rows="dynamic",
-                    use_container_width=True
-                )
-
-                # ✅ Submit Button with Animation
-                if st.button("🚀 Submit Updates", type="primary"):
-                    edited_rows = edited_df[source_df[editable_column] != edited_df[editable_column]]
-                    if not edited_rows.empty:
-                        edited_rows['AS_AT_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add timestamp
-                        edited_rows['RECORD_FLAG'] = 'O'  # Mark as overridden
-
-                        # Insert edited rows into target table
-                        session.write_pandas(edited_rows, target_table_name, overwrite=False)
-                        st.success("✅ Edited values inserted as new rows successfully!")
-                    else:
-                        st.info("ℹ️ No changes detected.")
-
+    if not source_df.empty:
+        if editable_column not in source_df.columns:
+            st.error(f"❌ Editable column '{editable_column}' not found in {selected_table}.")
         else:
-            st.info(f"ℹ️ No data available in {selected_table}.")
+            # ✅ Create Filter Inputs Above Each Column (Except Editable Column)
+            filter_values = {}
+            cols_to_filter = [col for col in source_df.columns if col != editable_column]
+            
+            col1, col2 = st.columns([3, 1])  # Adjust width if needed
+
+            with col1:
+                filter_container = st.container()
+                
+                with filter_container:
+                    filter_inputs = {}
+                    for col in cols_to_filter:
+                        filter_inputs[col] = st.text_input(f"", placeholder=f"🔎 Filter {col}", key=f"filter_{col}")
+
+            # ✅ Apply Filters Dynamically
+            filtered_df = source_df.copy()
+            for col, value in filter_inputs.items():
+                if value:
+                    filtered_df = filtered_df[filtered_df[col].astype(str).str.contains(value, case=False, na=False)]
+
+            # ✅ Column Config (Editable Column)
+            column_type = (
+                st.column_config.NumberColumn if pd.api.types.is_numeric_dtype(source_df[editable_column])
+                else st.column_config.TextColumn
+            )
+            
+            column_config = {
+                editable_column: column_type(
+                    "✏️ " + editable_column,
+                    help="This column is editable.",
+                    required=True,
+                )
+            }
+            
+            # ✅ Editable Data Table with Applied Filters
+            edited_df = st.data_editor(
+                filtered_df,
+                column_config=column_config,
+                disabled=[col for col in filtered_df.columns if col != editable_column],
+                num_rows="dynamic",
+                use_container_width=True
+            )
+
+            # ✅ Submit Button
+            if st.button("🚀 Submit Updates", type="primary"):
+                edited_rows = edited_df[source_df[editable_column] != edited_df[editable_column]]
+                if not edited_rows.empty:
+                    edited_rows['AS_AT_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    edited_rows['RECORD_FLAG'] = 'O'
+
+                    # Insert edited rows into target table
+                    session.write_pandas(edited_rows, target_table_name, overwrite=False)
+                    st.success("✅ Edited values inserted as new rows successfully!")
+                else:
+                    st.info("ℹ️ No changes detected.")
+
+    else:
+        st.info(f"ℹ️ No data available in {selected_table}.")
 
     with tab2:
         st.subheader(f"📝Overridden Values from {target_table_name}")
