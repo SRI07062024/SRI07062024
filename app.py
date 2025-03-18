@@ -140,18 +140,44 @@ if not table_info_df.empty:
                     use_container_width=True
                 )
 
+
                 # ✅ Submit Button with Animation
                 if st.button("🚀 Submit Updates", type="primary"):
-                    edited_rows = edited_df[source_df[editable_column] != edited_df[editable_column]]
+                    # Find rows where the editable column has changed
+                    edited_rows = source_df[source_df[editable_column] != edited_df[editable_column]].copy()
+                
                     if not edited_rows.empty:
-                        edited_rows['AS_AT_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add timestamp
+                        # Store old values in _OLD and new values in _NEW columns
+                        edited_rows[f"{editable_column}_OLD"] = source_df[editable_column]  # Original values
+                        edited_rows[f"{editable_column}_NEW"] = edited_df[editable_column]  # Edited values
+                
+                        # Remove the original editable column (since we now have _OLD and _NEW)
+                        edited_rows.drop(columns=[editable_column], inplace=True)
+                
+                        # Add timestamp and record flag
+                        edited_rows['AS_AT_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Timestamp
                         edited_rows['RECORD_FLAG'] = 'O'  # Mark as overridden
-
-                        # Insert edited rows into target table
+                
+                        # Insert updated rows into the target table
                         session.write_pandas(edited_rows, target_table_name, overwrite=False)
-                        st.success("✅ Edited values inserted as new rows successfully!")
+                
+                        st.success("✅ Edited values inserted into the target table with _OLD and _NEW values!")
                     else:
                         st.info("ℹ️ No changes detected.")
+
+
+                # # ✅ Submit Button with Animation
+                # if st.button("🚀 Submit Updates", type="primary"):
+                #     edited_rows = edited_df[source_df[editable_column] != edited_df[editable_column]]
+                #     if not edited_rows.empty:
+                #         edited_rows['AS_AT_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Add timestamp
+                #         edited_rows['RECORD_FLAG'] = 'O'  # Mark as overridden
+
+                #         # Insert edited rows into target table
+                #         session.write_pandas(edited_rows, target_table_name, overwrite=False)
+                #         st.success("✅ Edited values inserted as new rows successfully!")
+                #     else:
+                #         st.info("ℹ️ No changes detected.")
 
         else:
             st.info(f"ℹ️ No data available in {selected_table}.")
