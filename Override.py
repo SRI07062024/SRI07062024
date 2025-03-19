@@ -3,9 +3,9 @@ import pandas as pd
 from snowflake.snowpark import Session
 from datetime import datetime
 
-st.set_page_config(page_title="Override Dashboard", page_icon="📊", layout="centered")
-
-st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
+# Set up Streamlit page
+st.set_page_config(page_title="Override System", page_icon="📊", layout="centered")
+st.title("Override Dashboard")
 
 # Snowflake Connection
 try:
@@ -20,7 +20,7 @@ try:
     session = Session.builder.configs(connection_parameters).create()
     st.success("✅ Successfully connected to Snowflake!")
 except Exception as e:
-    st.error(f"❌ Failed to connect to Snowflake: {e}")
+    st.error(f"❌ Connection Error: {e}")
     st.stop()
 
 # Fetch override reference data
@@ -44,10 +44,11 @@ def fetch_source_data(source_table):
         return pd.DataFrame()
 
 # Insert into target table
-def insert_into_target_table(target_table, joining_key_values, editable_column, old_value, new_value, src_insert_ts):
+def insert_into_target_table(target_table, joining_keys, joining_values, editable_column, old_value, new_value, src_insert_ts):
     try:
-        columns = ", ".join(joining_key_values.keys()) + ", SRC_INSERT_TS, " + editable_column + "_OLD, " + editable_column + "_NEW, RECORD_FLAG, INSERT_TS"
-        values = ", ".join(f"'{v}'" for v in joining_key_values.values()) + f", '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP()"
+        # Generate columns and values dynamically
+        columns = ", ".join(joining_keys) + ", SRC_INSERT_TS, " + editable_column + "_OLD, " + editable_column + "_NEW, RECORD_FLAG, INSERT_TS"
+        values = ", ".join(f"'{val}'" for val in joining_values) + f", '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP()"
 
         insert_sql = f"""
             INSERT INTO {target_table} ({columns})
@@ -77,9 +78,9 @@ def insert_into_source_table(source_table, row_data, new_value, editable_column)
         st.error(f"Error inserting into {source_table}: {e}")
 
 # Update old record in source table
-def update_source_table_record_flag(source_table, joining_key_values):
+def update_source_table_record_flag(source_table, joining_keys, joining_values):
     try:
-        where_clause = " AND ".join([f"{col} = '{val}'" for col, val in joining_key_values.items()])
+        where_clause = " AND ".join([f"{col} = '{val}'" for col, val in zip(joining_keys, joining_values)])
         update_sql = f"""
             UPDATE {source_table}
             SET RECORD_FLAG = 'D'
@@ -137,7 +138,7 @@ def main():
         if not changed_rows.empty:
             for _, row in changed_rows.iterrows():
                 # Get joining key values
-                joining_key_values = {key: source_df.loc[row.name, key] for key in joining_keys}
+                joining_values = [source_df.loc[row.name, key] for key in joining_keys]
 
                 # Get old and new values
                 old_value = source_df.loc[row.name, editable_column]
@@ -147,13 +148,13 @@ def main():
                 src_insert_ts = str(source_df.loc[row.name, 'INSERT_TS'])
 
                 # 1. Insert into target table
-                insert_into_target_table(target_table, joining_key_values, editable_column, old_value, new_value, src_insert_ts)
+                insert_into_target_table(target_table, joining_keys, joining_values, editable_column, old_value, new_value, src_insert_ts)
 
                 # 2. Insert new record into source table
                 insert_into_source_table(selected_table, source_df.loc[row.name].to_dict(), new_value, editable_column)
 
                 # 3. Update old record in source table
-                update_source_table_record_flag(selected_table, joining_key_values)
+                update_source_table_record_flag(selected_table, joining_keys, joining_values)
 
             st.success("Data updated successfully!")
         else:
