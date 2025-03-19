@@ -155,7 +155,7 @@ if not table_info_df.empty:
                         edited_rows.drop(columns=[editable_column], inplace=True)
                 
                         # Add timestamp and record flag
-                        edited_rows['AS_AT_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Timestamp
+                        edited_rows['INSERT_TS'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Timestamp
                         edited_rows['RECORD_FLAG'] = 'O'  # Mark as overridden
                 
                         # Insert updated rows into the target table
