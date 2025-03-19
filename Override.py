@@ -146,19 +146,19 @@ if not table_info_df.empty:
                         # Insert into target table
                         session.write_pandas(edited_rows, target_table_name, overwrite=False)
 
-                        # ✅ Update source table
-                        for _, row in edited_rows.iterrows():
-                            condition = " AND ".join([f"{col} = '{row[col]}'" for col in source_df.columns if col != editable_column])
-                            update_source_sql = f"""
-                                UPDATE {selected_table}
-                                SET RECORD_FLAG = 'D'
-                                WHERE {condition} AND RECORD_FLAG <> 'D';
+                        # # ✅ Update source table
+                        # for _, row in edited_rows.iterrows():
+                        #     condition = " AND ".join([f"{col} = '{row[col]}'" for col in source_df.columns if col != editable_column])
+                        #     update_source_sql = f"""
+                        #         UPDATE {selected_table}
+                        #         SET RECORD_FLAG = 'D'
+                        #         WHERE {condition} AND RECORD_FLAG <> 'D';
                                 
-                                INSERT INTO {selected_table} ({", ".join(source_df.columns)})
-                                SELECT {", ".join([f"'{row[col]}'" if isinstance(row[col], str) else row[col] for col in source_df.columns])}
-                                , 'A';
-                            """
-                            session.sql(update_source_sql).collect()
+                        #         INSERT INTO {selected_table} ({", ".join(source_df.columns)})
+                        #         SELECT {", ".join([f"'{row[col]}'" if isinstance(row[col], str) else row[col] for col in source_df.columns])}
+                        #         , 'A';
+                        #     """
+                        #     session.sql(update_source_sql).collect()
 
                         st.success("✅ Changes saved successfully!")
                     else:
