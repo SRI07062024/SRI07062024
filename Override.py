@@ -46,7 +46,6 @@ def fetch_source_data(source_table):
 # Insert into target table
 def insert_into_target_table(target_table, joining_key_values, editable_column, old_value, new_value, src_insert_ts):
     try:
-        # Construct INSERT SQL for target table
         columns = ", ".join(joining_key_values.keys()) + ", SRC_INSERT_TS, " + editable_column + "_OLD, " + editable_column + "_NEW, RECORD_FLAG, INSERT_TS"
         values = ", ".join(f"'{v}'" for v in joining_key_values.values()) + f", '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP()"
 
@@ -66,7 +65,6 @@ def insert_into_source_table(source_table, row_data, new_value, editable_column)
         row_data_copy['RECORD_FLAG'] = 'A'  # Set new record as active
         row_data_copy['INSERT_TS'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # New timestamp
 
-        # Format values for SQL
         columns = ", ".join(row_data_copy.keys())
         values = ", ".join(f"'{v}'" for v in row_data_copy.values())
 
@@ -93,7 +91,6 @@ def update_source_table_record_flag(source_table, joining_key_values):
 
 # Main application logic
 def main():
-    # Fetch override reference data
     override_ref_df = fetch_override_ref_data()
 
     if override_ref_df.empty:
@@ -114,7 +111,10 @@ def main():
     table_info = module_data[module_data['SOURCE_TABLE'] == selected_table]
     target_table = table_info['TARGET_TABLE'].iloc[0]
     editable_column = table_info['EDITABLE_COLUMN'].iloc[0].upper()
-    joining_keys = table_info['JOINING_KEYS'].iloc[0].split(",")  # Handle multiple keys
+    
+    # Handling multiple joining keys
+    joining_keys_raw = table_info['JOINING_KEYS'].iloc[0]  # Joining keys are comma-separated
+    joining_keys = [key.strip().upper() for key in joining_keys_raw.split(",")]  # Convert to list
 
     # Fetch source data
     source_df = fetch_source_data(selected_table)
@@ -123,8 +123,13 @@ def main():
         st.info(f"No active records in {selected_table}.")
         st.stop()
 
-    # Make data editable
-    edited_df = st.data_editor(source_df, key="data_editor", num_rows="dynamic", use_container_width=True)
+    # Make only the editable column editable
+    edited_df = source_df.copy()
+    for col in edited_df.columns:
+        if col != editable_column:
+            edited_df[col] = edited_df[col].astype(str)  # Convert to string to make them non-editable
+
+    edited_df = st.data_editor(edited_df[[editable_column]], key="data_editor", num_rows="dynamic", use_container_width=True)
 
     if st.button("Submit Updates"):
         changed_rows = edited_df[edited_df[editable_column] != source_df[editable_column]]
@@ -132,8 +137,8 @@ def main():
         if not changed_rows.empty:
             for _, row in changed_rows.iterrows():
                 # Get joining key values
-                joining_key_values = {key: row[key] for key in joining_keys}
-                
+                joining_key_values = {key: source_df.loc[row.name, key] for key in joining_keys}
+
                 # Get old and new values
                 old_value = source_df.loc[row.name, editable_column]
                 new_value = row[editable_column]
