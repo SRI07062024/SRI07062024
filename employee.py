@@ -1,9 +1,26 @@
 import streamlit as st
 import pandas as pd
-from snowflake.snowpark.session import Session
+from snowflake.snowpark import Session  
+from datetime import datetime
 
-# Create a Snowflake session (automatically handled in Snowflake Streamlit)
-session = Session.builder.getOrCreate()
+# ✅ Snowflake connection parameters from Streamlit secrets
+try:
+    connection_parameters = {
+        "account": st.secrets["SNOWFLAKE_ACCOUNT"],
+        "user": st.secrets["SNOWFLAKE_USER"],
+        "password": st.secrets["SNOWFLAKE_PASSWORD"],
+        "warehouse": st.secrets["SNOWFLAKE_WAREHOUSE"],
+        "database": st.secrets["SNOWFLAKE_DATABASE"],
+        "schema": st.secrets["SNOWFLAKE_SCHEMA"],
+    }
+
+    # ✅ Create a Snowpark session
+    session = Session.builder.configs(connection_parameters).create()
+    st.success("✅ Successfully connected to Snowflake!")
+
+except Exception as e:
+    st.error(f"❌ Failed to connect to Snowflake: {e}")
+    st.stop()
 
 # Table name
 table_name = "EMPLOYEE"
