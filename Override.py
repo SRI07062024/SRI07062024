@@ -14,7 +14,8 @@ st.set_page_config(
 st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
 
 # Retrieve Snowflake credentials from Streamlit secrets
-try:
+def get_connection():
+ try:
     connection_parameters = {
         "account": st.secrets["SNOWFLAKE_ACCOUNT"],
         "user": st.secrets["SNOWFLAKE_USER"],
