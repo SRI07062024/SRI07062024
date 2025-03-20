@@ -1,18 +1,36 @@
 import streamlit as st
 import pandas as pd
-import snowflake.connector
+from snowflake.snowpark import Session
+from datetime import datetime
 
-# Connect to Snowflake
-@st.cache_resource
-def get_connection():
-    return snowflake.connector.connect(
-        user='YOUR_USER',
-        password='YOUR_PASSWORD',
-        account='YOUR_ACCOUNT',
-        warehouse='YOUR_WAREHOUSE',
-        database='YOUR_DATABASE',
-        schema='YOUR_SCHEMA'
-    )
+# Page configuration
+st.set_page_config(
+    page_title="Editable Data Override App",
+    page_icon="📊",
+    layout="centered"
+)
+
+# Title with custom styling
+st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
+
+# Retrieve Snowflake credentials from Streamlit secrets
+try:
+    connection_parameters = {
+        "account": st.secrets["SNOWFLAKE_ACCOUNT"],
+        "user": st.secrets["SNOWFLAKE_USER"],
+        "password": st.secrets["SNOWFLAKE_PASSWORD"],
+        "warehouse": st.secrets["SNOWFLAKE_WAREHOUSE"],
+        "database": st.secrets["SNOWFLAKE_DATABASE"],
+        "schema": st.secrets["SNOWFLAKE_SCHEMA"],
+    }
+
+    # ✅ Create a Snowpark session
+    session = Session.builder.configs(connection_parameters).create()
+    st.success("✅ Successfully connected to Snowflake!")
+
+except Exception as e:
+    st.error(f"❌ Failed to connect to Snowflake: {e}")
+    st.stop()
 
 # Fetch tables and columns from Override_Ref
 def fetch_override_details(conn):
