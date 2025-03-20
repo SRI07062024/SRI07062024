@@ -89,7 +89,7 @@ def insert_into_override_table(target_table, row_data, old_value, new_value, edi
 
         insert_sql = f"""
             INSERT INTO {target_table} (asofdate, segment, category, src_ins_ts, amount_old, amount_new, insert_ts, record_flag)
-            VALUES ('{row_data['ASOFDATE']}', '{row_data['SEGMENT']}', '{row_data['CATEGORY']}', 
+            VALUES ('{row_data['AS_OF_DATE']}', '{row_data['SEGMENT']}', '{row_data['CATEGORY']}', 
                     '{src_ins_ts}', {old_value}, {new_value}, CURRENT_TIMESTAMP(), 'A')
         """
         session.sql(insert_sql).collect()
