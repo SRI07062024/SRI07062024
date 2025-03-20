@@ -57,8 +57,7 @@ if st.button('Submit'):
     else:
         try:
             # Insert records into Snowflake using write_pandas
-            insert_into_table(edited_df, table_name, mode='append')
-           # session.write_pandas(edited_df, table_name, mode='append')
+            session.write_pandas(edited_df, table_name, mode='append')
             st.success('Records inserted successfully!')
         except Exception as e:
             st.error(f"Error inserting records: {e}")
