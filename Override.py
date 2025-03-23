@@ -100,7 +100,7 @@ def insert_into_target_table(target_table, row_data, editable_column, old_value,
 
         insert_sql = f"""
             INSERT INTO {target_table} (AS_AT_DATE, SRC_INSERT_TS, {editable_column}_OLD, {editable_column}_NEW, RECORD_FLAG, INSERT_TS)
-            VALUES ('{src_insert_ts}', '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP())
+            VALUES ('{as_at_date}', '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP())
         """
         session.sql(insert_sql).collect()
         st.success(f"✅ Record inserted into {target_table}")
