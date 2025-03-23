@@ -34,7 +34,7 @@ session = connect_to_snowflake()
 def fetch_data(table_name):
     try:
         df = session.table(table_name).to_pandas()
-        df.columns = [col.upper() for col in df.columns]
+        df.columns = [col.strip().upper() for col in df.columns]
         return df
     except Exception as e:
         st.error(f"Error fetching data from {table_name}: {e}")
