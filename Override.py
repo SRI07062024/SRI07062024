@@ -96,17 +96,24 @@ edited_df = st.data_editor(
 # Function to insert records into the target table
 def insert_into_target_table(target_table, row_data, editable_column, old_value, new_value):
     try:
-        src_insert_ts = row_data['AS_AT_DATE']
+        # Extract AS_AT_DATE safely
+        src_insert_ts = row_data.get('AS_AT_DATE')
+        if not src_insert_ts:
+            st.error("❌ AS_AT_DATE not found in row data.")
+            return
 
+        # Formulate the SQL query with correct variables
         insert_sql = f"""
             INSERT INTO {target_table} (AS_AT_DATE, SRC_INSERT_TS, {editable_column}_OLD, {editable_column}_NEW, RECORD_FLAG, INSERT_TS)
-            #VALUES ('{as_at_date}', '{as_at_date}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP())
             VALUES ('{src_insert_ts}', '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP())
         """
+
+        # Execute the SQL query using Snowpark
         session.sql(insert_sql).collect()
         st.success(f"✅ Record inserted into {target_table}")
     except Exception as e:
         st.error(f"❌ Error inserting into {target_table}: {e}")
+
 
 # Compare original and edited data to identify changes
 def identify_and_insert_changes():
