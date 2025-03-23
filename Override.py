@@ -93,3 +93,50 @@ edited_df = st.data_editor(
     disabled=disabled_cols
 )
 
+# Function to insert records into the target table
+def insert_into_target_table(target_table, row_data, editable_column, old_value, new_value):
+    try:
+        src_insert_ts = row_data['AS_AT_DATE']
+
+        insert_sql = f"""
+            INSERT INTO {target_table} (AS_AT_DATE, SRC_INSERT_TS, {editable_column}_OLD, {editable_column}_NEW, RECORD_FLAG, INSERT_TS)
+            VALUES ('{src_insert_ts}', '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP())
+        """
+        session.sql(insert_sql).collect()
+        st.success(f"✅ Record inserted into {target_table}")
+    except Exception as e:
+        st.error(f"❌ Error inserting into {target_table}: {e}")
+
+# Compare original and edited data to identify changes
+def identify_and_insert_changes():
+    try:
+        # Remove the highlighting for comparison
+        source_df_clean = source_df.copy()
+        edited_df_clean = edited_df.copy()
+
+        # Rename the editable column to remove the pencil icon (if added earlier)
+        edited_df_clean.columns = [col.replace(" ✏️", "") for col in edited_df_clean.columns]
+
+        # Find changes using the editable column
+        changed_rows = edited_df_clean[edited_df_clean[editable_column] != source_df_clean[editable_column]]
+
+        if changed_rows.empty:
+            st.info("No changes detected.")
+            return
+
+        for _, row in changed_rows.iterrows():
+            old_value = source_df_clean.loc[_, editable_column]
+            new_value = row[editable_column]
+
+            # Perform the insert into the target table
+            insert_into_target_table(target_table, row, editable_column, old_value, new_value)
+        
+        st.success("All changes inserted into the target table.")
+    except Exception as e:
+        st.error(f"Error during update/insert: {e}")
+
+# Add a Submit button for updates
+if st.button("Submit Updates"):
+    identify_and_insert_changes()
+
+
