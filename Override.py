@@ -40,6 +40,8 @@ def fetch_data(table_name):
         st.error(f"Error fetching data from {table_name}: {e}")
         return pd.DataFrame()
 
+print([repr(col) for col in df.columns])
+
 # Fetch Override_Ref data for the selected module
 def fetch_override_ref_data(selected_module=None):
     try:
