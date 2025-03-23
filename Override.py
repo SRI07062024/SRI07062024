@@ -104,8 +104,8 @@ def insert_into_target_table(target_table, row_data, editable_column, old_value,
 
         # Formulate the SQL query with correct variables
         insert_sql = f"""
-            INSERT INTO {target_table} (AS_AT_DATE, SRC_INS_TS, {editable_column}_OLD, {editable_column}_NEW, RECORD_FLAG, INSERT_TS)
-            VALUES ('{src_insert_ts}', '{src_insert_ts}', '{old_value}', '{new_value}', 'A', CURRENT_TIMESTAMP())
+            INSERT INTO {target_table} (AS_AT_DATE, SRC_INS_TS, {editable_column}_OLD, {editable_column}_NEW, RECORD_FLAG)
+            VALUES ('{src_insert_ts}', '{src_insert_ts}', '{old_value}', '{new_value}', 'A')
         """
 
         # Execute the SQL query using Snowpark
