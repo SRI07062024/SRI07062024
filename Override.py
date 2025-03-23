@@ -36,11 +36,10 @@ def fetch_data(table_name):
         df = session.table(table_name).to_pandas()
         df.columns = [col.strip().upper() for col in df.columns]
         return df
+        print([repr(col) for col in df.columns])
     except Exception as e:
         st.error(f"Error fetching data from {table_name}: {e}")
         return pd.DataFrame()
-
-print([repr(col) for col in df.columns])
 
 # Fetch Override_Ref data for the selected module
 def fetch_override_ref_data(selected_module=None):
