@@ -36,7 +36,6 @@ def fetch_data(table_name):
         df = session.table(table_name).to_pandas()
         df.columns = [col.strip().upper() for col in df.columns]
         return df
-        print([repr(col) for col in df.columns])
     except Exception as e:
         st.error(f"Error fetching data from {table_name}: {e}")
         return pd.DataFrame()
@@ -146,7 +145,7 @@ def main():
                     changed_rows = edited_df[edited_df[editable_column] != source_df[editable_column]]
                     if not changed_rows.empty:
                         for index, row in changed_rows.iterrows():
-                            primary_key_values = {col: row[col] for col in joining_keys}
+                            primary_key_values = {col:row[col] for col in joining_keys}
                             new_value = row[editable_column]
                             old_value = source_df.loc[index, editable_column]
 
