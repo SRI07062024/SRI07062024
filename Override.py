@@ -117,8 +117,8 @@ def insert_into_target_table(target_table, row_data, editable_column, old_value,
             as_at_date = f"'{as_at_date}'"
 
         # Construct final column and values
-        column_str = ", ".join(columns + ['AS_AT_DATE', f"{editable_column}_OLD", f"{editable_column}_NEW", 'RECORD_FLAG', 'INSERT_TS'])
-        value_str = ", ".join(formatted_values + [f"CURRENT_TIMESTAMP()", f"'{old_value}'", f"'{new_value}'", "'A'", "CURRENT_TIMESTAMP()"])
+        column_str = ", ".join(columns + ['AS_AT_DATE', f"{editable_column}_OLD", f"{editable_column}_NEW", 'RECORD_FLAG'])
+        value_str = ", ".join(formatted_values + [f"CURRENT_TIMESTAMP()", f"'{old_value}'", f"'{new_value}'", "'A'"])
 
         # Insert SQL query
         insert_sql = f"""
