@@ -1,6 +1,19 @@
 import streamlit as st
 import pandas as pd
 from snowflake.snowpark import Session
+from datetime import datetime
+ 
+ # Page configuration
+ st.set_page_config(
+     page_title="Editable Data Override App",
+     page_icon="📊",
+     layout="centered"
+ )
+ 
+ # Title with custom styling
+ st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
+ 
+ # Retrieve Snowflake credentials from Streamlit secrets
 
 # Connect to Snowflake
 def connect_to_snowflake():
@@ -60,10 +73,10 @@ target_table = override_ref_df['TARGET_TABLE'].iloc[0]
 editable_column = override_ref_df['EDITABLE_COLUMN'].iloc[0].strip().upper()
 join_keys = override_ref_df['JOINING_KEYS'].iloc[0].strip().upper().split(',')
 
-st.write(f"📊 **Source Table:** {source_table}")
-st.write(f"📥 **Target Table:** {target_table}")
-st.write(f"🖋️ **Editable Column:** {editable_column}")
-st.write(f"🔑 **Joining Keys:** {join_keys}")
+#st.write(f"📊 **Source Table:** {source_table}")
+#st.write(f"📥 **Target Table:** {target_table}")
+#st.write(f"🖋️ **Editable Column:** {editable_column}")
+#st.write(f"🔑 **Joining Keys:** {join_keys}")
 
 # Fetch and display source data
 source_df = fetch_data(source_table)
@@ -87,7 +100,7 @@ st.write("🖋️ **Editable Data**")
 edited_data = st.data_editor(
     editable_df,
     column_config={
-        editable_column: st.column_config.NumberColumn(f"{editable_column} (Editable)")
+        editable_column: st.column_config.NumberColumn(f"{editable_column} (Editable)✏️")
     },
     disabled=[col for col in editable_df.columns if col != editable_column],
     use_container_width=True
@@ -133,7 +146,7 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
             """
             session.sql(insert_sql).collect()
 
-        st.success(f"✅ Changes inserted into {target_table}")
+        #st.success(f"✅ Changes inserted into {target_table}")
 
     except Exception as e:
         st.error(f"❌ Error inserting into {target_table}: {e}")
@@ -178,7 +191,7 @@ def insert_into_source_table(session, target_table, source_table, editable_colum
         
         # Execute SQL
         session.sql(insert_sql).collect()
-        st.success(f"✅ Data inserted into {source_table} from {target_table}")
+        #st.success(f"✅ Data inserted into {source_table} from {target_table}")
 
     except Exception as e:
         st.error(f"❌ Error inserting into {source_table}: {e}")
@@ -203,7 +216,7 @@ def update_old_record(session, target_table, source_table, editable_column, join
         """
 
         session.sql(update_sql).collect()
-        st.success(f"✅ Old records updated in {source_table} with record_flag = 'D'")
+        #st.success(f"✅ Old records updated in {source_table} with record_flag = 'D'")
 
     except Exception as e:
         st.error(f"❌ Error updating old records in {source_table}: {e}")
@@ -222,7 +235,8 @@ if st.button("Submit Changes"):
     # Step 3: Update old records in source table (fact_portfolio_perf)
     update_old_record(session, target_table, source_table, editable_column, join_keys)
 
-    st.success("✅ All steps completed successfully!")
-
+    st.success("✅ Data updated successfully!")
+    else:
+    st.info("No changes were made.")
 
 
