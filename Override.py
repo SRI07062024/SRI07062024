@@ -186,3 +186,29 @@ def insert_into_source_table(session, target_table, source_table, editable_colum
 if st.button("Insert into Source Table"):
     insert_into_source_table(session, target_table, source_table, editable_column, join_keys)
 
+# Function to update the old record in the source table
+def update_old_record(session, target_table, source_table, editable_column, join_keys):
+    try:
+        # Form the dynamic SQL query to update old records
+        join_condition = " AND ".join([f"tgt.{key} = src.{key}" for key in join_keys])
+
+        update_sql = f"""
+            UPDATE {source_table} tgt
+            SET record_flag = 'D'
+            FROM {target_table} src
+            WHERE {join_condition}
+              AND tgt.{editable_column} = src.{editable_column}_OLD
+              AND tgt.record_flag = 'A';
+        """
+
+        session.sql(update_sql).collect()
+        st.success(f"✅ Old records updated in {source_table} with record_flag = 'D'")
+
+    except Exception as e:
+        st.error(f"❌ Error updating old records in {source_table}: {e}")
+
+# Call the function when needed
+if st.button("Update Old Records (Step 5)"):
+    update_old_record(session, target_table, source_table, editable_column, join_keys)
+
+
