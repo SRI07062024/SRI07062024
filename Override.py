@@ -172,6 +172,7 @@ def insert_into_source_table(session, target_table, source_table, editable_colum
             FROM {target_table} src
             JOIN {source_table} tgt
             ON {" AND ".join([f"tgt.{key} = src.{key}" for key in join_keys])}
+            AND tgt.{editable_column} = src.{editable_column}_OLD
             WHERE tgt.RECORD_FLAG = 'A';
         """
         
