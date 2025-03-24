@@ -96,10 +96,10 @@ edited_data = st.data_editor(
 st.write("✅ Review your changes and click 'Submit' when ready.")
 
 # Function to identify changes and insert into target table dynamically
-def insert_into_target_table(session, source_df, edited_df, target_table, editable_column, join_keys):
+def insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys):
     try:
         # Identify rows where the editable column has changed
-        changes_df = edited_df[edited_df[editable_column] != source_df[editable_column]]
+        changes_df = edited_data[edited_data[editable_column] != source_df[editable_column]]
 
         if changes_df.empty:
             st.info("No changes detected. No records to insert.")
@@ -139,4 +139,4 @@ def insert_into_target_table(session, source_df, edited_df, target_table, editab
 
 # Single 'Submit Changes' button
 if st.button("Submit Changes"):
-    insert_into_target_table(session, source_df, edited_df, target_table, editable_column, join_keys)
+    insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys)
