@@ -3,15 +3,24 @@ import snowflake.connector
 import pandas as pd
 
 # Connect to Snowflake
-def get_snowflake_connection():
-    return snowflake.connector.connect(
-        user=st.secrets["snowflake"]["user"],
-        password=st.secrets["snowflake"]["password"],
-        account=st.secrets["snowflake"]["account"],
-        warehouse=st.secrets["snowflake"]["warehouse"],
-        database=st.secrets["snowflake"]["database"],
-        schema=st.secrets["snowflake"]["schema"]
-    )
+def connect_to_snowflake():
+    try:
+        connection_parameters = {
+            "account": st.secrets["SNOWFLAKE_ACCOUNT"],
+            "user": st.secrets["SNOWFLAKE_USER"],
+            "password": st.secrets["SNOWFLAKE_PASSWORD"],
+            "warehouse": st.secrets["SNOWFLAKE_WAREHOUSE"],
+            "database": st.secrets["SNOWFLAKE_DATABASE"],
+            "schema": st.secrets["SNOWFLAKE_SCHEMA"],
+        }
+        session = Session.builder.configs(connection_parameters).create()
+        st.success("✅ Connected to Snowflake")
+        return session
+    except Exception as e:
+        st.error(f"❌ Connection failed: {e}")
+        st.stop()
+
+session = connect_to_snowflake()
 
 # Fetch override_ref table data
 def get_override_ref_data(conn):
