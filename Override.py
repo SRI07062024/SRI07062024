@@ -140,3 +140,48 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
 # Single 'Submit Changes' button
 if st.button("Submit Changes"):
     insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys)
+
+
+# Function to insert updated records into the source table (Step 4)
+def insert_into_source_table(session, target_table, source_table, editable_column, join_keys):
+    try:
+        # Generate common columns excluding record_flag, as_at_date, and editable_column
+        target_columns_query = f"""
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE UPPER(TABLE_NAME) = '{source_table.upper()}'
+              AND COLUMN_NAME NOT IN ('RECORD_FLAG', 'AS_AT_DATE', '{editable_column.upper()}')
+        """
+        common_columns = [row['COLUMN_NAME'].upper() for row in session.sql(target_columns_query).to_pandas().to_dict('records')]
+
+        if not common_columns:
+            st.error("No matching common columns found between target and source.")
+            return
+
+        # Formulate the insert SQL query
+        columns_to_insert = ', '.join(common_columns + [editable_column, 'RECORD_FLAG', 'AS_AT_DATE'])
+
+        insert_sql = f"""
+            INSERT INTO {source_table} ({columns_to_insert})
+            SELECT
+                {', '.join([f"src.{col}" for col in common_columns])},
+                src.{editable_column}_NEW,
+                'A',
+                CURRENT_TIMESTAMP(0)
+            FROM {target_table} src
+            JOIN {source_table} tgt
+            ON {" AND ".join([f"tgt.{key} = src.{key}" for key in join_keys])}
+            WHERE tgt.RECORD_FLAG = 'A';
+        """
+        
+        # Execute SQL
+        session.sql(insert_sql).collect()
+        st.success(f"✅ Data inserted into {source_table} from {target_table}")
+
+    except Exception as e:
+        st.error(f"❌ Error inserting into {source_table}: {e}")
+
+# Button to trigger Step 4
+if st.button("Insert into Source Table"):
+    insert_into_source_table(session, target_table, source_table, editable_column, join_keys)
+
