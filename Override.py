@@ -47,7 +47,6 @@ def fetch_data(table_name):
     try:
         query = f"SELECT * FROM {table_name}"
         df = session.sql(query).to_pandas()
-        # Convert column names to uppercase for consistency
         df.columns = [col.strip().upper() for col in df.columns]
         return df
     except Exception as e:
@@ -73,16 +72,12 @@ if source_df.empty:
     st.stop()
 
 # Step 2: Display Source Data using st.data_editor
-
-# Ensure editable column exists in the source data
 if editable_column not in source_df.columns:
     st.error(f"Editable column '{editable_column}' not found in source table.")
     st.stop()
 
-# Create a copy of the source data for editing
 editable_df = source_df.copy()
 
-# Highlight the editable column and make it editable
 st.write("🖋️ **Editable Data**")
 edited_data = st.data_editor(
     editable_df,
@@ -95,7 +90,7 @@ edited_data = st.data_editor(
 
 st.write("✅ Review your changes and click 'Submit' when ready.")
 
-# Function to identify changes and insert into target table dynamically
+# Step 3: Insert into Target Table
 def insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys):
     try:
         # Identify rows where the editable column has changed
@@ -108,15 +103,21 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
         st.write("🟢 Detected Changes:")
         st.dataframe(changes_df)
 
-        # Fetch the target table columns dynamically
-        target_columns_query = f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{target_table}'"
-        target_columns = [row['COLUMN_NAME'].upper() for row in session.sql(target_columns_query).to_pandas().to_dict('records')]
+        # Fetch target table columns
+        column_info_query = f"""
+            SELECT COLUMN_NAME, IS_NULLABLE
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = '{target_table}'
+        """
+        column_info_df = session.sql(column_info_query).to_pandas()
+        column_info_df['COLUMN_NAME'] = column_info_df['COLUMN_NAME'].str.upper()
+        non_nullable_columns = set(column_info_df[column_info_df['IS_NULLABLE'] == 'NO']['COLUMN_NAME'])
 
-        # Identify common columns (excluding non-required ones)
+        # Identify common columns
         excluded_columns = {editable_column, 'AS_AT_DATE', 'RECORD_FLAG', 'SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW'}
-        common_columns = [col for col in source_df.columns if col in target_columns and col not in excluded_columns]
+        common_columns = [col for col in source_df.columns if col in column_info_df['COLUMN_NAME'].values and col not in excluded_columns]
 
-        # Form final columns for insertion
+        # Form columns for insert
         columns_to_insert = common_columns + ['SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW', 'RECORD_FLAG', 'AS_AT_DATE']
         columns_to_insert_sql = ', '.join(columns_to_insert)
 
@@ -126,7 +127,15 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
             new_value = row[editable_column]
             as_at_date = row['AS_AT_DATE']
 
-            # Format values to handle SQL injection safely
+            # Validate Non-Nullable Columns
+            for col in non_nullable_columns:
+                if col not in columns_to_insert:
+                    continue
+                if pd.isna(row[col]):
+                    st.error(f"❌ Error: Column '{col}' cannot be NULL. Please provide a valid value.")
+                    return
+
+            # Format values safely
             values_to_insert = []
             for col in common_columns:
                 value = row[col]
@@ -139,10 +148,10 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
 
             values_to_insert.extend([
                 "CURRENT_TIMESTAMP()",
-                str(old_value),
-                str(new_value),
+                str(old_value) if pd.notna(old_value) else "NULL",
+                str(new_value) if pd.notna(new_value) else "NULL",
                 "'A'",
-                f"'{as_at_date}'"
+                f"'{as_at_date}'" if pd.notna(as_at_date) else "NULL"
             ])
 
             values_to_insert_sql = ', '.join(values_to_insert)
@@ -160,6 +169,6 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
     except Exception as e:
         st.error(f"❌ Error inserting into {target_table}: {e}")
 
-# Single 'Submit Changes' button
+# Submit Changes
 if st.button("Submit Changes"):
     insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys)
