@@ -175,7 +175,7 @@ def main():
             st.markdown(f"**Editable Column:** {editable_column_upper}")
 
             # Determine primary key columns dynamically based on selected_table
-            if selected_table == 'portfolio_perf':
+            if selected_table == 'fact_portfolio_perf':
                 primary_key_cols = ['ASOFDATE', 'SEGMENT', 'CATEGORY']
             else:
                 st.error("Primary key columns not defined for this table. Please update the code.")
