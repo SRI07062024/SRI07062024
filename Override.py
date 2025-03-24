@@ -113,7 +113,7 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
         target_columns = [row['COLUMN_NAME'].upper() for row in session.sql(target_columns_query).to_pandas().to_dict('records')]
 
         # Identify common columns (excluding SRC_INS_TS, editable_column_old, editable_column_new, record_flag, and as_at_date)
-        common_columns = [col for col in source_df.columns if col in target_columns and col not in [editable_column, 'AS_AT_DATE', 'RECORD_FLAG']]
+        common_columns = [col for col in source_df.columns if col in target_columns and col not in [editable_column, 'AS_AT_DATE', 'RECORD_FLAG','AS_OF_DATE']]
 
         for _, row in changes_df.iterrows():
             old_value = source_df.loc[source_df.index == row.name, editable_column].values[0]
