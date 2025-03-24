@@ -1,6 +1,6 @@
 import streamlit as st
-import snowflake.connector
 import pandas as pd
+from snowflake.snowpark import Session
 
 # Connect to Snowflake
 def connect_to_snowflake():
@@ -22,15 +22,52 @@ def connect_to_snowflake():
 
 session = connect_to_snowflake()
 
-# Fetch override_ref table data
-def get_override_ref_data(conn):
-    query = "SELECT Source_table, Target_table, Editable_column, Joining_Keys FROM Override_Ref WHERE Is_active = 'Y'"
-    return pd.read_sql(query, conn)
+# Retrieve Configuration Data from Override_Ref
+def fetch_override_ref_data(module_number):
+    try:
+        df = session.sql(f"SELECT * FROM override_ref WHERE module = {module_number}").to_pandas()
+        return df
+    except Exception as e:
+        st.error(f"Error fetching Override_Ref data: {e}")
+        return pd.DataFrame()
 
-# Initialize connection and get data
-conn = get_snowflake_connection()
-override_data = get_override_ref_data(conn)
+# Example - Assuming module number is passed via query parameters
+query_params = st.query_params
+module_number = query_params.get("module", 1)
+override_ref_df = fetch_override_ref_data(module_number)
 
-# Display fetched configuration data
-st.write("Configuration from Override_Ref:")
-st.dataframe(override_data)
+if override_ref_df.empty:
+    st.warning("No configuration data found in Override_Ref.")
+    st.stop()
+else:
+    st.write("Configuration Retrieved:", override_ref_df)
+
+# Function to fetch data from a given table
+def fetch_data(table_name):
+    try:
+        query = f"SELECT * FROM {table_name}"
+        df = session.sql(query).to_pandas()
+        # Convert column names to uppercase for consistency
+        df.columns = [col.strip().upper() for col in df.columns]
+        return df
+    except Exception as e:
+        st.error(f"Error fetching data from {table_name}: {e}")
+        return pd.DataFrame()
+
+# Extract source and target table names, editable column, and join keys
+source_table = override_ref_df['SOURCE_TABLE'].iloc[0]
+target_table = override_ref_df['TARGET_TABLE'].iloc[0]
+editable_column = override_ref_df['EDITABLE_COLUMN'].iloc[0].strip().upper()
+join_keys = override_ref_df['JOINING_KEYS'].iloc[0].strip().upper().split(',')
+
+st.write(f"📊 **Source Table:** {source_table}")
+st.write(f"📥 **Target Table:** {target_table}")
+st.write(f"🖋️ **Editable Column:** {editable_column}")
+st.write(f"🔑 **Joining Keys:** {join_keys}")
+
+# Fetch and display source data
+source_df = fetch_data(source_table)
+
+if source_df.empty:
+    st.warning("No data found in the source table.")
+    st.stop()
