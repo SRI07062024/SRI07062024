@@ -117,18 +117,6 @@ def insert_into_source_table(source_table, row_data, new_value, editable_column)
     except Exception as e:
         st.error(f"Error inserting into {source_table}: {e}")
 # Function to update record flag in source table
-def update_source_table_record_flag(source_table, primary_key_values):
-    try:
-        where_clause = " AND ".join([f"{col} = '{val}'" for col, val in primary_key_values.items()])
-        update_sql = f"""
-            UPDATE {source_table}
-            SET record_flag = 'D',
-                insert_ts = CURRENT_TIMESTAMP()
-            WHERE {where_clause}
-        """
-        session.sql(update_sql).collect()
-    except Exception as e:
-        st.error(f"Error updating record flag in {source_table}: {e}")
 
 # Function to insert into override table
 def insert_into_override_table(target_table, asofdate, segment, category, src_ins_ts, amount_old, amount_new):
@@ -187,7 +175,6 @@ def main():
             st.markdown(f"**Editable Column:** {editable_column_upper}")
 
             # Determine primary key columns dynamically based on selected_table
-            primary_key_cols = table_info_df['PRIMARY_KEY_COLUMNS'].iloc[0].split(',')  # Assuming it's a comma-separated list
             if selected_table == 'portfolio_perf':
                 primary_key_cols = ['ASOFDATE', 'SEGMENT', 'CATEGORY']
             else:
