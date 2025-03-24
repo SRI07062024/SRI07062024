@@ -71,3 +71,31 @@ source_df = fetch_data(source_table)
 if source_df.empty:
     st.warning("No data found in the source table.")
     st.stop()
+
+# Step 2: Display Source Data using st.data_editor
+
+# Ensure editable column exists in the source data
+if editable_column not in source_df.columns:
+    st.error(f"Editable column '{editable_column}' not found in source table.")
+    st.stop()
+
+# Create a copy of the source data for editing
+editable_df = source_df.copy()
+
+# Highlight the editable column and make it editable
+st.write("🖋️ **Editable Data**")
+edited_data = st.data_editor(
+    editable_df,
+    column_config={
+        editable_column: st.column_config.NumberColumn(f"{editable_column} (Editable)")
+    },
+    disabled=[col for col in editable_df.columns if col != editable_column],
+    use_container_width=True
+)
+
+st.write("✅ Review your changes and click 'Submit' when ready.")
+submit_button = st.button("Submit Changes")
+
+if submit_button:
+    st.write("🔎 Changes submitted. Proceeding with updates...")
+
