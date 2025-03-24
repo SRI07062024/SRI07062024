@@ -94,9 +94,10 @@ edited_df = st.data_editor(
 )
 
 # Function to insert records into the target table
+# Function to insert records into the target table
 def insert_into_target_table(target_table, row_data, editable_column, old_value, new_value):
     try:
-        # Extract values from row_data for all columns except the editable column, as_at_date, and record_flag
+        # Extract values for columns except editable column, AS_AT_DATE, and RECORD_FLAG
         columns = [col for col in row_data.keys() if col.upper() not in [editable_column.upper(), 'AS_AT_DATE', 'RECORD_FLAG']]
         values = [row_data[col] for col in columns]
 
@@ -106,10 +107,18 @@ def insert_into_target_table(target_table, row_data, editable_column, old_value,
             for val in values
         ]
 
-        # Construct the final column and values
-        src_insert_ts = row_data.get('AS_AT_DATE')
-        column_str = ", ".join(columns + ['AS_AT_DATE', 'SRC_INS_TS', f"{editable_column}_OLD", f"{editable_column}_NEW", 'RECORD_FLAG'])
-        value_str = ", ".join(formatted_values + [f"CURRENT_TIMESTAMP()", f"'{src_insert_ts}'", f"'{old_value}'", f"'{new_value}'", "'A'"])
+        # Ensure AS_AT_DATE is correctly formatted as a DATE
+        as_at_date = row_data.get('AS_AT_DATE')
+        if isinstance(as_at_date, pd.Timestamp) or isinstance(as_at_date, datetime):
+            as_at_date = as_at_date.strftime('%Y-%m-%d')
+        elif not as_at_date or pd.isna(as_at_date):
+            as_at_date = "NULL"
+        else:
+            as_at_date = f"'{as_at_date}'"
+
+        # Construct final column and values
+        column_str = ", ".join(columns + ['AS_AT_DATE', f"{editable_column}_OLD", f"{editable_column}_NEW", 'RECORD_FLAG', 'INSERT_TS'])
+        value_str = ", ".join(formatted_values + [f"CURRENT_TIMESTAMP()", f"'{old_value}'", f"'{new_value}'", "'A'", "CURRENT_TIMESTAMP()"])
 
         # Insert SQL query
         insert_sql = f"""
