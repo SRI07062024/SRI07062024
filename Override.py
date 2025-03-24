@@ -33,7 +33,7 @@ def fetch_override_ref_data(module_number):
 
 # Example - Assuming module number is passed via query parameters
 query_params = st.query_params
-module_number = query_params.get("module", 1)
+module_number = int(query_params.get("module", 1))
 override_ref_df = fetch_override_ref_data(module_number)
 
 if override_ref_df.empty:
@@ -112,24 +112,47 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
         target_columns_query = f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{target_table}'"
         target_columns = [row['COLUMN_NAME'].upper() for row in session.sql(target_columns_query).to_pandas().to_dict('records')]
 
-        # Identify common columns (excluding SRC_INS_TS, editable_column_old, editable_column_new, record_flag, and as_at_date)
-        common_columns = [col for col in source_df.columns if col in target_columns and col not in [editable_column, 'AS_AT_DATE', 'RECORD_FLAG']]
+        # Identify common columns (excluding non-required ones)
+        excluded_columns = {editable_column, 'AS_AT_DATE', 'RECORD_FLAG', 'SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW'}
+        common_columns = [col for col in source_df.columns if col in target_columns and col not in excluded_columns]
 
+        # Form final columns for insertion
+        columns_to_insert = common_columns + ['SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW', 'RECORD_FLAG', 'AS_AT_DATE']
+        columns_to_insert_sql = ', '.join(columns_to_insert)
+
+        # Perform row-wise insertion
         for _, row in changes_df.iterrows():
             old_value = source_df.loc[source_df.index == row.name, editable_column].values[0]
             new_value = row[editable_column]
             as_at_date = row['AS_AT_DATE']
 
-            # Forming the dynamic insert query
-            columns_to_insert = ', '.join(common_columns + ['SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW', 'RECORD_FLAG', 'AS_AT_DATE'])
-            values_to_insert = ', '.join([f"'{row[col]}'" if isinstance(row[col], str) else str(row[col]) for col in common_columns])
-            
+            # Format values to handle SQL injection safely
+            values_to_insert = []
+            for col in common_columns:
+                value = row[col]
+                if pd.isna(value):
+                    values_to_insert.append("NULL")
+                elif isinstance(value, str):
+                    values_to_insert.append(f"'{value.replace("'", "''")}'")
+                else:
+                    values_to_insert.append(str(value))
+
+            values_to_insert.extend([
+                "CURRENT_TIMESTAMP()",
+                str(old_value),
+                str(new_value),
+                "'A'",
+                f"'{as_at_date}'"
+            ])
+
+            values_to_insert_sql = ', '.join(values_to_insert)
+
+            # Form the final insert query
             insert_sql = f"""
-                INSERT INTO {target_table} ({columns_to_insert})
-                VALUES (
-                    {values_to_insert}, '{as_at_date}', {old_value}, {new_value}, 'A', CURRENT_TIMESTAMP()
-                )
+                INSERT INTO {target_table} ({columns_to_insert_sql})
+                VALUES ({values_to_insert_sql})
             """
+            st.write(f"📝 Executing SQL: {insert_sql}")  # Debugging
             session.sql(insert_sql).collect()
 
         st.success(f"✅ Changes inserted into {target_table}")
