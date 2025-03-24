@@ -96,21 +96,29 @@ edited_df = st.data_editor(
 # Function to insert records into the target table
 def insert_into_target_table(target_table, row_data, editable_column, old_value, new_value):
     try:
-        # Extract AS_AT_DATE safely
+        # Extract values from row_data for all columns except the editable column, as_at_date, and record_flag
+        columns = [col for col in row_data.keys() if col.upper() not in [editable_column.upper(), 'AS_AT_DATE', 'RECORD_FLAG']]
+        values = [row_data[col] for col in columns]
+
+        # Convert to SQL format (handling NULL values and proper quoting)
+        formatted_values = [
+            f"'{val}'" if isinstance(val, str) else "NULL" if pd.isna(val) else str(val) 
+            for val in values
+        ]
+
+        # Construct the final column and values
         src_insert_ts = row_data.get('AS_AT_DATE')
-        if not src_insert_ts:
-            st.error("❌ AS_AT_DATE not found in row data.")
-            return
+        column_str = ", ".join(columns + ['AS_AT_DATE', 'SRC_INSERT_TS', f"{editable_column}_OLD", f"{editable_column}_NEW", 'RECORD_FLAG'])
+        value_str = ", ".join(formatted_values + [f"CURRENT_TIMESTAMP()", f"'{src_insert_ts}'", f"'{old_value}'", f"'{new_value}'", "'A'"])
 
-        # Formulate the SQL query with correct variables
+        # Insert SQL query
         insert_sql = f"""
-            INSERT INTO {target_table} (AS_AT_DATE, SRC_INS_TS, {editable_column}_OLD, {editable_column}_NEW, RECORD_FLAG)
-            VALUES ('{src_insert_ts}', '{src_insert_ts}', '{old_value}', '{new_value}', 'A')
+            INSERT INTO {target_table} ({column_str})
+            VALUES ({value_str})
         """
-
-        # Execute the SQL query using Snowpark
         session.sql(insert_sql).collect()
         st.success(f"✅ Record inserted into {target_table}")
+
     except Exception as e:
         st.error(f"❌ Error inserting into {target_table}: {e}")
 
