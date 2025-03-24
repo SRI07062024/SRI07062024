@@ -27,7 +27,7 @@ def connect_to_snowflake():
             "schema": st.secrets["SNOWFLAKE_SCHEMA"],
         }
         session = Session.builder.configs(connection_parameters).create()
-        st.success("✅Successfully connected to Snowflake!")
+        st.success("✅ Successfully connected to Snowflake!")
         return session
     except Exception as e:
         st.error(f"❌ Connection failed: {e}")
