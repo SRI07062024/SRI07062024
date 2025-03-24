@@ -99,3 +99,50 @@ submit_button = st.button("Submit Changes")
 if submit_button:
     st.write("🔎 Changes submitted. Proceeding with updates...")
 
+# Function to identify changes and insert into target table dynamically
+def insert_into_target_table(session, source_df, edited_df, target_table, editable_column, join_keys):
+    try:
+        # Identify rows where the editable column has changed
+        changes_df = edited_df[edited_df[editable_column] != source_df[editable_column]]
+
+        if changes_df.empty:
+            st.info("No changes detected. No records to insert.")
+            return
+
+        st.write("🟢 Detected Changes:")
+        st.dataframe(changes_df)
+
+        # Fetch the target table columns dynamically
+        target_columns_query = f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{target_table}'"
+        target_columns = [row['COLUMN_NAME'].upper() for row in session.sql(target_columns_query).to_pandas().to_dict('records')]
+
+        # Identify common columns (excluding SRC_INS_TS, editable_column_old, editable_column_new, record_flag, and as_at_date)
+        common_columns = [col for col in source_df.columns if col in target_columns and col not in [editable_column, 'AS_AT_DATE', 'RECORD_FLAG']]
+
+        for _, row in changes_df.iterrows():
+            old_value = source_df.loc[source_df.index == row.name, editable_column].values[0]
+            new_value = row[editable_column]
+            as_at_date = row['AS_AT_DATE']
+
+            # Forming the dynamic insert query
+            columns_to_insert = ', '.join(common_columns + ['SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW', 'RECORD_FLAG', 'AS_AT_DATE'])
+            values_to_insert = ', '.join([f"'{row[col]}'" if isinstance(row[col], str) else str(row[col]) for col in common_columns])
+            
+            insert_sql = f"""
+                INSERT INTO {target_table} ({columns_to_insert})
+                VALUES (
+                    {values_to_insert}, '{as_at_date}', {old_value}, {new_value}, 'A', CURRENT_TIMESTAMP()
+                )
+            """
+            session.sql(insert_sql).collect()
+
+        st.success(f"✅ Changes inserted into {target_table}")
+
+    except Exception as e:
+        st.error(f"❌ Error inserting into {target_table}: {e}")
+
+# Add a button for submitting changes
+if st.button("Submit Changes"):
+    insert_into_target_table(session, source_df, edited_df, target_table, editable_column, join_keys)
+
+
