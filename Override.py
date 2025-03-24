@@ -119,15 +119,16 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
             old_value = source_df.loc[source_df.index == row.name, editable_column].values[0]
             new_value = row[editable_column]
             as_at_date = row['AS_AT_DATE']
+            as_of_date = row['AS_OF_DATE']
 
             # Forming the dynamic insert query
-            columns_to_insert = ', '.join(common_columns + ['SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW', 'RECORD_FLAG', 'AS_AT_DATE'])
+            columns_to_insert = ', '.join(common_columns + ['AS_OF_DATE','SRC_INS_TS', f'{editable_column}_OLD', f'{editable_column}_NEW', 'RECORD_FLAG', 'AS_AT_DATE'])
             values_to_insert = ', '.join([f"'{row[col]}'" if isinstance(row[col], str) else str(row[col]) for col in common_columns])
             
             insert_sql = f"""
                 INSERT INTO {target_table} ({columns_to_insert})
                 VALUES (
-                    {values_to_insert}, '{as_at_date}', {old_value}, {new_value}, 'A', CURRENT_TIMESTAMP()
+                    {values_to_insert},'{as_of_date}', '{as_at_date}', {old_value}, {new_value}, 'A', CURRENT_TIMESTAMP()
                 )
             """
             session.sql(insert_sql).collect()
