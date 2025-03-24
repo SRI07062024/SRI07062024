@@ -96,8 +96,8 @@ edited_data = st.data_editor(
 st.write("✅ Review your changes and click 'Submit' when ready.")
 submit_button = st.button("Submit Changes")
 
-if submit_button:
-    st.write("🔎 Changes submitted. Proceeding with updates...")
+# if submit_button:
+#     st.write("🔎 Changes submitted. Proceeding with updates...")
 
 # Function to identify changes and insert into target table dynamically
 def insert_into_target_table(session, source_df, edited_df, target_table, editable_column, join_keys):
