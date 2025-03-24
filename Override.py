@@ -3,17 +3,17 @@ import pandas as pd
 from snowflake.snowpark import Session
 from datetime import datetime
  
- # Page configuration
- st.set_page_config(
-     page_title="Editable Data Override App",
-     page_icon="📊",
-     layout="centered"
- )
+# Page configuration
+st.set_page_config(
+    page_title="Editable Data Override App",
+    page_icon="📊",
+    layout="centered"
+)
  
- # Title with custom styling
- st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
+# Title with custom styling
+st.markdown("<h1 style='text-align: center; color: #1E88E5;'>Override Dashboard</h1>", unsafe_allow_html=True)
  
- # Retrieve Snowflake credentials from Streamlit secrets
+# Retrieve Snowflake credentials from Streamlit secrets
 
 # Connect to Snowflake
 def connect_to_snowflake():
