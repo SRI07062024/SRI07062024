@@ -139,8 +139,8 @@ def insert_into_target_table(session, source_df, edited_data, target_table, edit
         st.error(f"❌ Error inserting into {target_table}: {e}")
 
 # Single 'Submit Changes' button
-if st.button("Submit Changes"):
-    insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys)
+# if st.button("Submit Changes"):
+#     insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys)
 
 
 # Function to insert updated records into the source table (Step 4)
@@ -184,8 +184,8 @@ def insert_into_source_table(session, target_table, source_table, editable_colum
         st.error(f"❌ Error inserting into {source_table}: {e}")
 
 # Button to trigger Step 4
-if st.button("Insert into Source Table"):
-    insert_into_source_table(session, target_table, source_table, editable_column, join_keys)
+# if st.button("Insert into Source Table"):
+#     insert_into_source_table(session, target_table, source_table, editable_column, join_keys)
 
 # Function to update the old record in the source table
 def update_old_record(session, target_table, source_table, editable_column, join_keys):
@@ -209,7 +209,20 @@ def update_old_record(session, target_table, source_table, editable_column, join
         st.error(f"❌ Error updating old records in {source_table}: {e}")
 
 # Call the function when needed
-if st.button("Update Old Records (Step 5)"):
+# if st.button("Update Old Records (Step 5)"):
+#     update_old_record(session, target_table, source_table, editable_column, join_keys)
+
+if st.button("Submit Changes"):
+    # Step 1: Insert into target table (fact_portfolio_perf_override)
+    insert_into_target_table(session, source_df, edited_data, target_table, editable_column, join_keys)
+
+    # Step 2: Insert into source table (fact_portfolio_perf)
+    insert_into_source_table(session, target_table, source_table, editable_column, join_keys)
+
+    # Step 3: Update old records in source table (fact_portfolio_perf)
     update_old_record(session, target_table, source_table, editable_column, join_keys)
+
+    st.success("✅ All steps completed successfully!")
+
 
 
