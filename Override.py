@@ -236,7 +236,3 @@ if st.button("Submit Changes"):
     update_old_record(session, target_table, source_table, editable_column, join_keys)
 
     st.success("✅ Data updated successfully!")
-    else:
-    st.info("No changes were made.")
-
-
